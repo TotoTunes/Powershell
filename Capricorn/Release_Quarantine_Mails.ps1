@@ -14,7 +14,7 @@ Connect-Exchangeonline
 
 }
 
-$path = "C:\Users\thomas\OneDrive - IT Anywhere\Documenten\Capricorn\Spam\Katrin_Export_2-02-2022.csv"
+$path = Read-host "Enter \\path\filename.csv"
 $mails = Import-Csv -Path $path -Header "Identity","SenderAddress","Subject","ReceivedTime","Release" -Delimiter ";"
 foreach ($m in $mails) 
 {
