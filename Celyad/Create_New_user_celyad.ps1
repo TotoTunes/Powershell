@@ -81,7 +81,7 @@ $fileshare = "\\cel-fsv01\Users"
 
 Write-Host "Connecting to Office 365"
 M365_Connection
-cls
+Clear-Host
 
 #parameters for user creation
 $firstname = Read-Host "Enter the first name"
@@ -121,7 +121,7 @@ Pause
 
 Write-Host "Starting Sync to O365" -ForegroundColor DarkCyan
 Write-Host " "
-cd "\\CEL-DOM01\C$\Users\Public\Public Desktop"
+Set-Location "\\CEL-DOM01\C$\Users\Public\Public Desktop"
 .\DeltaSync.ps1
 
 Write-Host "syncing... this may take up to 2 minutes" -ForegroundColor Yellow -BackgroundColor Black
