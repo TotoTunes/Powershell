@@ -38,7 +38,7 @@ Set-AzureADUserLicense -ObjectId $userUPN -AssignedLicenses $LicensesToAssign
     
 }
 
-#function to get a valid user
+#region function to get a valid user
 function GetExampleUser ($ex) {
 
 Try{
@@ -57,7 +57,7 @@ Catch [Microsoft.ActiveDirectory.Management.ADIdentityNotFoundException]
 return $AD
     
 }
-
+#endregion
 #Function to create folder on \\CEL-FSV01\Users
 function CreateFolder ($path,$username,$domain) {
 
@@ -74,7 +74,8 @@ function CreateFolder ($path,$username,$domain) {
     }
 
 #Fixed parameters that don't change
-    $Boston = "OU=Celyad,OU=Users,OU=Boston,DC=medpole,DC=local"
+Set-Variable -Name Boston -Value "OU=Celyad,OU=Users,OU=Boston,DC=medpole,DC=local" -Option ReadOnly
+    #$Boston = "OU=Celyad,OU=Users,OU=Boston,DC=medpole,DC=local"
 $Belgium = "OU=Celyad,OU=SBSUsers,OU=Users,OU=MyBusiness,DC=medpole,DC=local"
 $Domain = "medpole"
 $fileshare = "\\cel-fsv01\Users"
