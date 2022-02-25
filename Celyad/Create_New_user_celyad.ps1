@@ -125,8 +125,15 @@ Write-Host " "
 Set-Location "\\CEL-DOM01\C$\Users\Public\Public Desktop"
 .\DeltaSync.ps1
 
-Write-Host "syncing... this may take up to 2 minutes" -ForegroundColor Yellow -BackgroundColor Black
-Start-Sleep -Seconds 120
+Write-Host "syncing... this may take some time" -ForegroundColor Yellow -BackgroundColor Black
+#Start-Sleep -Seconds 180
+
+for ($i = 0; $i -lt 180; $i++) {
+    
+    $i++
+    Start-Sleep -Seconds 1
+    Write-Progress -PercentComplete $i -Activity "Syncing" -SecondsRemaining (180-$i)
+}
 
 
 $AZ_New_User = Get-AzureADuser -SearchString $login
