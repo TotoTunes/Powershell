@@ -74,8 +74,8 @@ function CreateFolder ($path,$username,$domain) {
     }
 
 #Fixed parameters that don't change
-Set-Variable -Name Boston -Value "OU=Celyad,OU=Users,OU=Boston,DC=medpole,DC=local" -Option ReadOnly
-    #$Boston = "OU=Celyad,OU=Users,OU=Boston,DC=medpole,DC=local"
+#Set-Variable -Name Boston -Value "OU=Celyad,OU=Users,OU=Boston,DC=medpole,DC=local" -Option ReadOnly
+$Boston = "OU=Celyad,OU=Users,OU=Boston,DC=medpole,DC=local"
 $Belgium = "OU=Celyad,OU=SBSUsers,OU=Users,OU=MyBusiness,DC=medpole,DC=local"
 $Domain = "medpole"
 $fileshare = "\\cel-fsv01\Users"
