@@ -1,7 +1,6 @@
 $list = Get-QuarantineMessage -SenderAddress "newsletter@celyad.com"
 
-foreach ($l in $list)
-{
+foreach ($l in $list) {
     if ( $l.ReleaseStatus -ne "RELEASED") {
         Release-QuarantineMessage -identity $l.Identity -ReleaseToAll
         Write-Host $l.SenderAddress "sent to "
@@ -13,8 +12,7 @@ foreach ($l in $list)
 
 $list = Get-QuarantineMessage -SenderAddress "invoice_approval@celyad.com"
 
-foreach ($l in $list)
-{
+foreach ($l in $list) {
     if ( $l.ReleaseStatus -ne "RELEASED") {
         Release-QuarantineMessage -identity $l.Identity -ReleaseToAll
         Write-Host $l.SenderAddress "sent to "
