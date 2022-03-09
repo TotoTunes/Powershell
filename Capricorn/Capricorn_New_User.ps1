@@ -58,7 +58,7 @@ return $AD
     
 }
 #endregion
-#Function to create folder on \\CEL-FSV01\Users
+#Function to create folder on \\FP\Users
 function CreateFolder ($path,$username,$domain) {
 
     $fullpath = $path+"\"+$username

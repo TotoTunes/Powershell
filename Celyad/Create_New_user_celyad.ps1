@@ -159,6 +159,15 @@ foreach ($group in $group_list) {
 
 }
 
+Write-Host "email with all the new user information will be sent to support@bopartner.com to create a ticket"
+New-Item -Path "C:\temp" -ItemType File -Name "$login.txt" -Value "This contains all the information about the new user: " 
+Add-Content -Path "C:\temp\$login.txt" -Value "First name: $firstname"
+Add-Content -Path "C:\temp\$login.txt" -Value "Last name: $Lastname" 
+Add-Content -Path "C:\temp\$login.txt" -Value "Login: $login" 
+Add-Content -Path "C:\temp\$login.txt" -Value "Manager: $manager"
+Add-Content -Path "C:\temp\$login.txt" -Value "Example user: $example_user"
+Send-MailMessage
+
 <#
 $acl = get-acl -path $fileshare
 $new=$user,”FullControl”,”ContainerInherit,ObjectInherit”,”None”,”Allow”
