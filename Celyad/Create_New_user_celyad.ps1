@@ -73,8 +73,8 @@ function CreateFolder ($path, $username, $domain) {
 }
 
 #Fixed parameters that don't change
-#Set-Variable -Name Boston -Value "OU=Celyad,OU=Users,OU=Boston,DC=medpole,DC=local" -Option ReadOnly
-$Boston = "OU=Celyad,OU=Users,OU=Boston,DC=medpole,DC=local"
+Set-Variable -Name Boston -Value "OU=Celyad,OU=Users,OU=Boston,DC=medpole,DC=local" -Option ReadOnly
+#$Boston = "OU=Celyad,OU=Users,OU=Boston,DC=medpole,DC=local"
 $Belgium = "OU=Celyad,OU=SBSUsers,OU=Users,OU=MyBusiness,DC=medpole,DC=local"
 $Domain = "medpole"
 $fileshare = "\\cel-fsv01\Users"
@@ -127,16 +127,17 @@ Set-Location "\\CEL-DOM01\C$\Users\Public\Public Desktop"
 Write-Host "syncing... this may take some time" -ForegroundColor Yellow -BackgroundColor Black
 #Start-Sleep -Seconds 180
 
-for ($i = 0; $i -lt 180; $i++) {
+for ($i = 0; $i -lt 100; $i++) {
     
-    $i++
+    #$i++
     Start-Sleep -Seconds 1
-    Write-Progress -PercentComplete $i -Activity "Syncing" -SecondsRemaining (180 - $i)
+    Write-Progress -PercentComplete $i -Activity "Syncing" -SecondsRemaining (100 - $i)
 }
 
 
 
 $AZ_New_User = Get-AzureADuser -SearchString "temp01"
+Set-AzureADUser -ObjectID $AZ_New_User.ObjectId --UsageLocation "BE"
 
 
 $AZ_Example_user = Get-AzureADUser -SearchString "igennart" 
