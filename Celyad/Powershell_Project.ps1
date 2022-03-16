@@ -57,7 +57,7 @@ function GetExampleUser ($ex) {
     
 }
 #endregion
-#Function to create folder on \\CEL-FSV01\Users
+#Function to create folder on file server
 function CreateFolder ($path, $username, $domain) {
 
     $fullpath = $path + "\" + $username
@@ -73,11 +73,11 @@ function CreateFolder ($path, $username, $domain) {
 }
 
 #Fixed parameters that don't change
-#Set-Variable -Name Boston -Value "OU=Celyad,OU=Users,OU=Boston,DC=medpole,DC=local" -Option ReadOnly
-$Boston = "OU=Celyad,OU=Users,OU=Boston,DC=medpole,DC=local"
-$Belgium = "OU=Celyad,OU=SBSUsers,OU=Users,OU=MyBusiness,DC=medpole,DC=local"
-$Domain = "medpole"
-$fileshare = "\\cel-fsv01\Users"
+Set-Variable -Name Boston -Value "boston" -Option ReadOnly
+#$Boston = "boston"
+$Belgium = "OU"
+$Domain = "domain"
+$fileshare = "\\server\Users"
 
 Write-Host "Connecting to Office 365"
 M365_Connection
@@ -136,18 +136,11 @@ for ($i = 0; $i -lt 100; $i++) {
 
 
 
-$AZ_New_User = Get-AzureADuser -SearchString $login
-if ($USA -eq "Y") {
-    Set-AzureADUser -ObjectID $AZ_New_User.ObjectId -UsageLocation "BE"
-}
-else {
-    Set-AzureADUser -ObjectID $AZ_New_User.ObjectId -UsageLocation "USA"
-    
-}
+$AZ_New_User = Get-AzureADuser -SearchString "temp01"
+Set-AzureADUser -ObjectID $AZ_New_User.ObjectId --UsageLocation "BE"
 
-AssingLicenses($AZ_New_User.UserPrincipalName)
 
-$AZ_Example_user = Get-AzureADUser -SearchString $example_user.Mail
+$AZ_Example_user = Get-AzureADUser -SearchString "igennart" 
 $group_list = Get-AzureADUserMembership -ObjectId $AZ_Example_user.ObjectId
 
 foreach ($group in $group_list) {
@@ -167,19 +160,11 @@ foreach ($group in $group_list) {
 
 }
 
-#Write-Host "email with all the new user information will be sent to support@bopartner.com to create a ticket"
+Write-Host "email with all the new user information will be sent to support@bopartner.com to create a ticket"
 New-Item -Path "C:\temp" -ItemType File -Name "$login.txt" -Value "This contains all the information about the new user: " 
 Add-Content -Path "C:\temp\$login.txt" -Value "First name: $firstname"
 Add-Content -Path "C:\temp\$login.txt" -Value "Last name: $Lastname" 
 Add-Content -Path "C:\temp\$login.txt" -Value "Login: $login" 
 Add-Content -Path "C:\temp\$login.txt" -Value "Manager: $manager"
 Add-Content -Path "C:\temp\$login.txt" -Value "Example user: $example_user"
-#Send-MailMessage
-
-<#
-$acl = get-acl -path $fileshare
-$new=$user,”FullControl”,”ContainerInherit,ObjectInherit”,”None”,”Allow”
-$accessRule = new-object System.Security.AccessControl.FileSystemAccessRule $new
-$acl.AddAccessRule($accessRule)
-$acl | Set-Acl $dfsfolder
-#>
+Send-MailMessage
