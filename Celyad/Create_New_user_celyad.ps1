@@ -145,6 +145,8 @@ else {
     
 }
 
+Start-Sleep -Seconds 60
+
 AssingLicenses($AZ_New_User.UserPrincipalName)
 
 $AZ_Example_user = Get-AzureADUser -SearchString $example_user.Mail
@@ -174,6 +176,7 @@ Add-Content -Path "C:\temp\$login.txt" -Value "Last name: $Lastname"
 Add-Content -Path "C:\temp\$login.txt" -Value "Login: $login" 
 Add-Content -Path "C:\temp\$login.txt" -Value "Manager: $manager"
 Add-Content -Path "C:\temp\$login.txt" -Value "Example user: $example_user"
+Add-Content -Path "C:\temp\$login.txt" -Value "Job title: $Job"
 #Send-MailMessage
 
 <#

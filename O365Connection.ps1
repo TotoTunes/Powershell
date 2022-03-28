@@ -26,7 +26,7 @@ switch ($selection) {
         $login = Read-Host "enter your login"
         Connect-AzureAd -AccountId $login
         Connect-ExchangeOnline -UserPrincipalName $login
-        Connect-MsolService -cred $login
+        Connect-MsolService
     }
     Default {}
 }
