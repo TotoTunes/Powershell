@@ -1,0 +1,1 @@
+Set-MailboxAutoReplyConfiguration edanloy@celyad.com -AutoReplyState enabled -ExternalAudience all -InternalMessage "Edouard no longer works for Celyad. Please address all your mails to mfitacodina@celyad.com" -ExternalMessage "Edouard no longer works for Celyad. Please address all your mails to mfitacodina@celyad.com" 
