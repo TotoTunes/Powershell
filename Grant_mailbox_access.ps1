@@ -4,7 +4,7 @@
     $user = $u
     $mailbox = Read-Host -Prompt 'Shared mailbox'
     Add-MailboxPermission -Identity $mailbox -User $user -AccessRights FullAccess -InheritanceType All -AutoMapping $true
-    Add-RecipientPermission -Identity $mailbox -Trustee $user -AccessRights SendAs
+    Add-RecipientPermission -Identity $mailbox -Trustee $user -AccessRights SendAs -Confirm:$true
     $Continue = Read-Host -Prompt "Do you want to add another mailbox?(Y/N)"
     
     if ($Continue -eq "Y") {

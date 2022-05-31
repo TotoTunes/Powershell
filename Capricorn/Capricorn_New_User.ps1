@@ -93,7 +93,7 @@ New-ADUser -Name $firstname" "$Lastname -path $OU -SamAccountName $login -Accoun
 
 Start-Sleep -Seconds 10
 
-Set-ADUser -Identity $login -DisplayName $firstname" "$Lastname -HomePage $website -Add @{Proxyaddresses = "SMTP:$firstname.$Lastname@capricorn.be";}
+Set-ADUser -Identity $login -DisplayName $firstname" "$Lastname -HomePage $website -Add @{Proxyaddresses = "SMTP:$login@capricorn.be";}
 
 Write-Host "$login is created." 
 Start-Sleep -Seconds 5
