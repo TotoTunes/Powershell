@@ -85,7 +85,7 @@ $password = [string]($letters+$numbers+"!")
 $SecurePassword = ConvertTo-SecureString -String $password -AsPlainText -Force
 
 New-ADUser -Name $firstname" "$Lastname -path $OU -SamAccountName $login -AccountPassword $SecurePassword ´
--DisplayName $firstname" "$Lastname -EmailAddress $firstname"."$Lastname@capricorn.be ´
+-DisplayName $firstname" "$Lastname -EmailAddress $login@capricorn.be ´
 -City $example_user.City -Country $example_user.Country -PostalCode $example_user.PostalCode ´
 -Office $example_user.Office -Surname $Lastname ´
 -GivenName $firstname -Company $example_user.Company ´
