@@ -74,9 +74,10 @@ Write-Host "Connecting to Office 365"
 M365_Connection
 Clear-Host
 
-$firstname = Read-Host "Enter the first name"
+$Firstname = Read-Host "Enter the first name"
 $Lastname = Read-Host "Enter the Last name"
-$login = Read-Host "Enther the username"
+Write-host "Enther the username (first.lastname all small letters)" -ForegroundColor Re
+$login = Read-Host 
 $example = Read-Host "Example user"
 $example_user = GetExampleUser($example)
 $letters = (65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object {[char]$_}
@@ -84,16 +85,16 @@ $numbers = (65..90) + (97..122) | Get-Random -Count 5
 $password = [string]($letters+$numbers+"!")
 $SecurePassword = ConvertTo-SecureString -String $password -AsPlainText -Force
 
-New-ADUser -Name $firstname" "$Lastname -path $OU -SamAccountName $login -AccountPassword $SecurePassword ´
--DisplayName $firstname" "$Lastname -EmailAddress $login@capricorn.be ´
+New-ADUser -Name $Firstname" "$Lastname -path $OU -SamAccountName $login -AccountPassword $SecurePassword ´
+-DisplayName $Firstname" "$Lastname -EmailAddress $login@capricorn.be ´
 -City $example_user.City -Country $example_user.Country -PostalCode $example_user.PostalCode ´
 -Office $example_user.Office -Surname $Lastname ´
--GivenName $firstname -Company $example_user.Company ´
+-GivenName $Firstname -Company $example_user.Company ´
 -Enabled $true -UserPrincipalName $login@capricorn.be
 
 Start-Sleep -Seconds 10
 
-Set-ADUser -Identity $login -DisplayName $firstname" "$Lastname -HomePage $website -Add @{Proxyaddresses = "SMTP:$login@capricorn.be";}
+Set-ADUser -Identity $login -DisplayName $Firstname" "$Lastname -HomePage $website -Add @{Proxyaddresses = "SMTP:$login@capricorn.be";}
 
 Write-Host "$login is created." 
 Start-Sleep -Seconds 5

@@ -3,8 +3,8 @@
     'this script will add Send As and Full access right'
     $user = $u
     $mailbox = Read-Host -Prompt 'Shared mailbox'
-    Add-MailboxPermission -Identity $mailbox -User $user -AccessRights FullAccess -InheritanceType All -AutoMapping $true 
-    Add-RecipientPermission -Identity $mailbox -Trustee $user -AccessRights SendAs
+    Add-MailboxPermission -Identity $mailbox -User $user -AccessRights FullAccess -InheritanceType All -AutoMapping $true -Confirm:$false
+    Add-RecipientPermission -Identity $mailbox -Trustee $user -AccessRights SendAs -Confirm:$false
     $Continue = Read-Host -Prompt "Do you want to add another mailbox?(Y/N)"
     
     if ($Continue -eq "Y") {
