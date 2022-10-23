@@ -15,6 +15,7 @@ function M365_Connection {
 
 $login = Read-Host "Enther the username"
 $AD = Get-aduser -identity $login
+M365_Connection
 #disable user in AD
 Disable-ADAccount -Identity $login
 
@@ -27,10 +28,13 @@ Write-Host "All AD groups have been exported to C:\Temp\username.csv"
 Remove-ADPrincipalGroupMembership -Identity $User -MemberOf $AdGroups -confirm:$false
 
 #remove Company attribute
-get-aduser
+Get-aduser -Identity $login | Set-Aduser -Company ""
 #remove Manager attribute
+Set-ADUser -Identity $login -Clear manager
 #SYNC
+cd "\\CEL-DOM03\C$\_scripts\DeltaSync.ps1"
 #convert to shared mailbox
+Get-mailbox -Identity "$login@celyad.com" | Set-MailBox -Type Shared
 #set out of office message
 #Move OU
 #Sync Deactivation
