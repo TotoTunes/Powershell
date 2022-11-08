@@ -121,7 +121,7 @@ Pause
 
 Write-Host "Starting Sync to O365" -ForegroundColor DarkCyan
 Write-Host " "
-Set-Location "\\CEL-DOM01\C$\Users\Public\Public Desktop"
+Set-Location "\\CEL-DOM03\C$\temp"
 .\DeltaSync.ps1
 
 Write-Host "syncing... this may take some time" -ForegroundColor Yellow -BackgroundColor Black
