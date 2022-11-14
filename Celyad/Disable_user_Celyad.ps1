@@ -15,6 +15,7 @@ function M365_Connection {
 
 $login = Read-Host "Enther the username"
 $AD = Get-aduser -identity $login
+$OU = "OU=disabled users,DC=medpole,DC=local"
 M365_Connection
 #disable user in AD
 Disable-ADAccount -Identity $login
@@ -29,15 +30,31 @@ Remove-ADPrincipalGroupMembership -Identity $User -MemberOf $AdGroups -confirm:$
 
 #remove Company attribute
 Get-aduser -Identity $login | Set-Aduser -Company ""
+
 #remove Manager attribute
 Set-ADUser -Identity $login -Clear manager
+
 #SYNC
-cd "\\CEL-DOM03\C$\_scripts\DeltaSync.ps1"
+Set-Location "\\CEL-DOM03\C$\temp"
+.\DeltaSync.ps1
+Set-Location "C:\temp"
+
+#Sync Deactivation
+Set-Aduser -Identity $login -Clear ProxyAddresses
+
+#Move OU
+Get-ADUser $login | Move-ADObject -TargetPath $OU
+
+#SYNC
+Set-Location "\\CEL-DOM03\C$\temp"
+.\DeltaSync.ps1
+Set-Location "C:\temp"
+
+#recover deleted user
+
 #convert to shared mailbox
 Get-mailbox -Identity "$login@celyad.com" | Set-MailBox -Type Shared
 #set out of office message
-#Move OU
-#Sync Deactivation
-#SYNC
-#recover deleted user
+
+
 #remove license
