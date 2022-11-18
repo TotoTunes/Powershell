@@ -99,10 +99,19 @@ Set-Location "\\CEL-DOM03\C$\temp"
 Set-Location "C:\temp"
 
 #recover deleted user
+$del = get-msoluser -ReturnDeletedUsers
+foreach ($d in $del) 
+{
+    if ($d.userPrincipalname -eq "$login@celyad.com") {
+        Restore-MsolUser -ObjectId $d.ObjectId -AutoReconcileProxyConflicts
+    }
+}
+Write-Host "Waiting until restore is complete"-ForegroundColor Red
+Start-Sleep -Seconds 180
 
 #convert to shared mailbox
 Get-mailbox -Identity "$login@celyad.com" | Set-MailBox -Type Shared
 #set out of office message
 $message = OutOfOfficeMessage
-
+Set-MailboxAutoReplyConfiguration "$login@celyad.com" -AutoReplyState enabled -ExternalAudience all -InternalMessage $message
 #remove license
