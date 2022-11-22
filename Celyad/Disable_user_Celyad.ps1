@@ -72,7 +72,7 @@ Disable-ADAccount -Identity $login
 $ADGroups = Get-ADPrincipalGroupMembership -Identity  $User | where {$_.Name -ne “Domain Users”}
 
 $ADGroups | Export-Csv -Path C:\Temp\ADGroups\$login'.csv'
-Write-Host "All AD groups have been exported to C:\Temp\username.csv"
+Write-Host "All AD groups have been exported to C:\Temp\ADGroups\username.csv"
 
 Remove-ADPrincipalGroupMembership -Identity $User -MemberOf $AdGroups -confirm:$false
 
@@ -103,6 +103,7 @@ $del = get-msoluser -ReturnDeletedUsers
 foreach ($d in $del) 
 {
     if ($d.userPrincipalname -eq "$login@celyad.com") {
+        Write-Host $d.userPrincipalname
         Restore-MsolUser -ObjectId $d.ObjectId -AutoReconcileProxyConflicts
     }
 }
@@ -110,8 +111,11 @@ Write-Host "Waiting until restore is complete"-ForegroundColor Red
 Start-Sleep -Seconds 180
 
 #convert to shared mailbox
-Get-mailbox -Identity "$login@celyad.com" | Set-MailBox -Type Shared
+Get-mailbox -Identity "$login@celyad.com" | Set-MailBox -Type Shared -HiddenFromAddressListsEnabled $true
 #set out of office message
 $message = OutOfOfficeMessage
 Set-MailboxAutoReplyConfiguration "$login@celyad.com" -AutoReplyState enabled -ExternalAudience all -InternalMessage $message
-#remove license
+#remove licenses
+
+#prevent Sync issues 
+Get-MsolUser -UserPrincipalName "$login@celyad.com" | Set-MsolUser -ImmutableId ""
