@@ -114,7 +114,7 @@ Start-Sleep -Seconds 180
 Get-mailbox -Identity "$login@celyad.com" | Set-MailBox -Type Shared -HiddenFromAddressListsEnabled $true
 #set out of office message
 $message = OutOfOfficeMessage
-Set-MailboxAutoReplyConfiguration "$login@celyad.com" -AutoReplyState enabled -ExternalAudience all -InternalMessage $message
+Set-MailboxAutoReplyConfiguration "$login@celyad.com" -AutoReplyState enabled -ExternalAudience all -InternalMessage $message -ExternalMessage $message
 #remove licenses
 
 #prevent Sync issues 
