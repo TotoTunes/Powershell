@@ -23,11 +23,13 @@ switch ($selection) {
         M365_Connection
     }
     2 {
-        $cred = Get-Credential
-        $login = $cred.UserName
+        #$cred = Get-Credential
+        $login = Read-Host "enter login"
+        #$cred = ConvertTo-SecureString -String $login.ToString()
         Connect-AzureAd -AccountId $login
         Connect-ExchangeOnline -UserPrincipalName $login
         Connect-MsolService
+    
     }
     Default {}
 }

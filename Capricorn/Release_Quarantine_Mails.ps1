@@ -22,7 +22,7 @@ foreach ($m in $mails)
     Write-Host $m.Release 
     
     if ($m.Release -eq "Y") {
-        Release-QuarantineMessage -Identity $m.Identity -ReleaseToAll -Verbose
+        Release-QuarantineMessage -Identity $m.Identity -ReleaseToAll
         Write-Host "This message will be released" -ForegroundColor Green
         Start-Sleep -Seconds 2
     }

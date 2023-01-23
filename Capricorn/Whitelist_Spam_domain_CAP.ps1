@@ -15,7 +15,7 @@ foreach ($m in $mails)
         $dom = ($m.SenderAddress.Split("@"))[1]
         Write-Host "this domain will be whitelisted" -ForegroundColor Green
         Write-Host $dom
-        Set-HostedContentFilterPolicy -Identity default -AllowedSenderDomains @{Add=$dom} -Verbose
+        Set-HostedContentFilterPolicy -Identity default -AllowedSenderDomains @{Add=$dom}
         Set-HostedContentFilterPolicy -Identity "Most secured anti-spam policy" -AllowedSenderDomains @{Add=$dom}
     }
     else {
