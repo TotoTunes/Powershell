@@ -5,13 +5,13 @@ foreach ($m in $mailboxen)
 {
    try {
     $box = $m.UserPrincipalName +":\Calendar"
-    Add-MailboxFolderPermission -Identity $box -User $u -AccessRights Reviewer
+    Add-MailboxFolderPermission -Identity $box -User $u -AccessRights Reviewer -ErrorAction SilentlyContinue
    }
    catch {
     { 
         try {
             $box = $m.UserPrincipalName +":\Agenda"
-            Add-MailboxFolderPermission -Identity $box -User $u -AccessRights Reviewer
+            Add-MailboxFolderPermission -Identity $box -User $u -AccessRights Reviewer -ErrorAction SilentlyContinue
             }
         catch {
             {
