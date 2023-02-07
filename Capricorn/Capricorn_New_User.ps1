@@ -134,3 +134,11 @@ foreach ($group in $group_list) {
     }
 
 }
+
+$licenses = (Get-MsolAccountSku | Where-Object { $_.SkuPartNumber -like "SPE_E3"}).AccountSkuId
+$user = Get-MsolUser -UserPrincipalName $login"@capricorn.be"
+  if ($user -ne $null) {
+    Set-MsolUserLicense -UserPrincipalName $userPrincipalName -AddLicenses $licenses
+  } else {
+    Write-Output "User $displayName ($userPrincipalName) not found."
+  }

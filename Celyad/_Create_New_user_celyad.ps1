@@ -19,7 +19,7 @@ function M365_Connection {
 #function to assign licenses (E3 and Microsoft Defender for O365)
 function AssingLicenses ($mail) {
 
-    $userUPN = $mail
+<#     $userUPN = $mail
     $planName = "ENTERPRISEPACK"
     $planName2 = "ATP_ENTERPRISE"
     $License = New-Object -TypeName Microsoft.Open.AzureAD.Model.AssignedLicense
@@ -34,8 +34,15 @@ function AssingLicenses ($mail) {
     $LicensesToAssign = New-Object -TypeName Microsoft.Open.AzureAD.Model.AssignedLicenses
     $LicensesToAssign.AddLicenses = $License
 
-    Set-AzureADUserLicense -ObjectId $userUPN -AssignedLicenses $LicensesToAssign
-    
+    Set-AzureADUserLicense -ObjectId $userUPN -AssignedLicenses $LicensesToAssign #>
+
+    $licenses = (Get-MsolAccountSku | Where-Object { $_.SkuPartNumber -like "ENTERPRISEPACK" }).AccountSkuId
+   
+    Set-MsolUserLicense -UserPrincipalName $mail -AddLicenses $licenses    
+
+    $licenses = (Get-MsolAccountSku | Where-Object { $_.SkuPartNumber -like "ATP_ENTERPRISE" }).AccountSkuId
+   
+    Set-MsolUserLicense -UserPrincipalName $mail -AddLicenses $licenses    
 }
 
 #region function to get a valid user
@@ -130,7 +137,7 @@ Write-Host "syncing... this may take some time" -ForegroundColor Yellow -Backgro
 for ($i = 0; $i -lt 100; $i++) {
     
     #$i++
-    Start-Sleep -Seconds 1
+    Start-Sleep -Seconds 5
     Write-Progress -PercentComplete $i -Activity "Syncing" -SecondsRemaining (100 - $i)
 }
 
