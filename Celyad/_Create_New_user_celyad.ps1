@@ -132,23 +132,23 @@ Set-Location "\\CEL-DOM03\C$\temp"
 .\DeltaSync.ps1
 
 Write-Host "syncing... this may take some time" -ForegroundColor Yellow -BackgroundColor Black
-#Start-Sleep -Seconds 180
+Start-Sleep -Seconds 180
 
-for ($i = 0; $i -lt 100; $i++) {
+<#for ($i = 0; $i -lt 100; $i++) {
     
     #$i++
     Start-Sleep -Seconds 5
     Write-Progress -PercentComplete $i -Activity "Syncing" -SecondsRemaining (100 - $i)
-}
+}#>
 
 
 
 $AZ_New_User = Get-AzureADuser -SearchString $login
 if ($USA -eq "Y") {
-    Set-AzureADUser -ObjectID $AZ_New_User.ObjectId -UsageLocation "BE"
+    Set-AzureADUser -ObjectID $AZ_New_User.ObjectId -UsageLocation "USA"
 }
 else {
-    Set-AzureADUser -ObjectID $AZ_New_User.ObjectId -UsageLocation "USA"
+    Set-AzureADUser -ObjectID $AZ_New_User.ObjectId -UsageLocation "BE"
     
 }
 
