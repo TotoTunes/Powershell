@@ -57,7 +57,8 @@ $Lastname = Read-Host "Enter the Last name"
 $login = Read-Host "Enther the username"
 $I = Read-Host "Enter the Initials for the user"
 $Initials = $I.ToUpper()
-$UPN = $firstname.ToLower()+"."+$Lastname.ToLower()
+$Lastname_clean = $Lastname.Trim() -replace "\s"
+$UPN = $firstname.ToLower()+"."+$Lastname_clean.ToLower()
 $example = Read-Host "Example user"
 $example_user = GetExampleUser($example)
 
@@ -87,39 +88,18 @@ while ($null -eq $DeskPhone -or $DeskPhone -eq "") {
 
 $password = Read-Host "enter the password for the new user" -AsSecureString
 $website = "www.simontbraun.eu"
+$Street = "Avenue Louise 250"
 #$LawyerOu = "OU=$language,OU=$role,OU=Lawyers,OU=Personal,OU=SimontBraun,DC=braunbigwood,DC=local"
 #$EmployeeOU = "OU=$Language,OU=Employees,OU=Personal,OU=SimontBraun,DC=braunbigwood,DC=local"
 
 $index = $example_user.DistinguishedName.IndexOf(",")
 $OU= $example_user.DistinguishedName.Substring($index+1)
 
-New-ADUser -Name $firstname" "$Lastname -Path $OU -SamAccountName $login -AccountPassword $password -DisplayName $firstname" "$Lastname -EmailAddress $UPN@simontbraun.eu -City $example_user.City -State $example_user.State -Country $example_user.Country -PostalCode $example_user.PostalCode -Office $office -Surname $Lastname -GivenName $firstname -Company $example_user.Company -Enabled $true -UserPrincipalName $login@simontbraun.eu
+New-ADUser -Name $firstname" "$Lastname -Path $OU -SamAccountName $login -AccountPassword $password -DisplayName $firstname" "$Lastname -EmailAddress $UPN@simontbraun.eu -City $example_user.City -State $example_user.State -Country $example_user.Country -PostalCode $example_user.PostalCode -Office $office -Surname $Lastname -GivenName $firstname -StreetAddress $Street -Company $example_user.Company -Enabled $true -UserPrincipalName $login@simontbraun.eu
 
-<#switch ($role) {
-    1 {    
-        New-ADUser -Name $firstname" "$Lastname -Path $LawyerOu -SamAccountName $login -AccountPassword $password -DisplayName $firstname" "$Lastname -EmailAddress $UPN@simontbraun.eu -City $example_user.City -Country $example_user.Country -PostalCode $example_user.PostalCode -Office $example_user.Office -Surname $Lastname -GivenName $firstname -Company $example_user.Company -Enabled $true -UserPrincipalName $login@simontbraun.eu
-    }
-    2 {
-        New-ADUser -Name $firstname" "$Lastname -Path $LawyerOu -SamAccountName $login -AccountPassword $password -DisplayName $firstname" "$Lastname -EmailAddress $UPN@simontbraun.eu -City $example_user.City -Country $example_user.Country -PostalCode $example_user.PostalCode -Office $example_user.Office -Surname $Lastname -GivenName $firstname -Company $example_user.Company -Enabled $true -UserPrincipalName $login@simontbraun.eu
-    }
-    3 {
-        New-ADUser -Name $firstname" "$Lastname -Path $LawyerOu -SamAccountName $login -AccountPassword $password -DisplayName $firstname" "$Lastname -EmailAddress $UPN@simontbraun.eu -City $example_user.City -Country $example_user.Country -PostalCode $example_user.PostalCode -Office $example_user.Office -Surname $Lastname -GivenName $firstname -Company $example_user.Company -Enabled $true -UserPrincipalName $login@simontbraun.eu
-    }
-    4 {
-        New-ADUser -Name $firstname" "$Lastname -Path $EmployeeOU -SamAccountName $login -AccountPassword $password -DisplayName $firstname" "$Lastname -EmailAddress $UPN@simontbraun.eu -City $example_user.City -Country $example_user.Country -PostalCode $example_user.PostalCode -Office $example_user.Office -Surname $Lastname -GivenName $firstname -Company $example_user.Company -Enabled $true -UserPrincipalName $login@simontbraun.eu
-    }
-    5 {
-        New-ADUser -Name $firstname" "$Lastname -Path $EmployeeOU -SamAccountName $login -AccountPassword $password -DisplayName $firstname" "$Lastname -EmailAddress $UPN@simontbraun.eu -City $example_user.City -Country $example_user.Country -PostalCode $example_user.PostalCode -Office $example_user.Office -Surname $Lastname -GivenName $firstname -Company $example_user.Company -Enabled $true -UserPrincipalName $login@simontbraun.eu
-    }
-    Default {}
-}#>
+Get-ADuser -identity $example_user.SamAccountName -properties memberof | select-object memberof -expandproperty memberof | Add-AdGroupMember -Members $login
 
-#OU=FR,OU=Partners,OU=Lawyers,OU=Personal,OU=SimontBraun,DC=braunbigwood,DC=local
-
-
-
-get-ADuser -identity $example_user.SamAccountName -properties memberof | select-object memberof -expandproperty memberof | Add-AdGroupMember -Members $login
-Set-ADUser -Identity $login -DisplayName $firstname" "$Lastname -ScriptPath $example_user.ScriptPath -HomePage $website -Initials $Initials.ToUpper() -Add @{Proxyaddresses = "SMTP:$login@simontbraun.eu"}
+Set-ADUser -Identity $login -DisplayName $firstname" "$Lastname -ScriptPath $example_user.ScriptPath -HomePage $website -Initials $Initials.ToUpper() -Add @{Proxyaddresses = "SMTP:$UPN@simontbraun.eu"}
 Set-ADUser -Identity $login -Description $Job
 Set-ADUser -Identity $login -Fax $example_user.Fax
 Set-ADUser -Identity $login -POBox $example_user.POBox
@@ -128,20 +108,20 @@ Set-ADUser -Identity $login -HomePhone "+32 2 533 1$DeskPhone"
 Set-ADUser -Identity $login -Title $Job -Department $example_user.Department
 Set-ADUser -Identity $login -MobilePhone $Mobilephone 
 
+
+Set-ADUser -Identity $login -Add @{Proxyaddresses = "smtp:$UPN@simontbraun.be"}
+
 Set-ADUser -Identity $login -Add @{Proxyaddresses = "smtp:$login@simontbraun.eu"}
 Set-ADUser -Identity $login -Add @{Proxyaddresses = "smtp:$login@simontbraun.be"}
-
-Set-ADUser -Identity $login -Add @{Proxyaddresses = "SMTP:$UPN@simontbraun.eu"}
-Set-ADUser -Identity $login -Add @{Proxyaddresses = "smtp:$UPN@simontbraun.be"}
 
 Set-ADUser -Identity $login -Add @{Proxyaddresses = "smtp:$Initials@simontbraun.be"}
 Set-ADUser -Identity $login -Add @{Proxyaddresses = "smtp:$Initials@simontbraun.eu"}
 
-$smtp=$firstname[0]+"."+$Lastname
+$smtp=$firstname[0]+"."+$Lastname_clean
 Set-ADUser -Identity $login -Add @{Proxyaddresses = "smtp:$smtp@simontbraun.be"}
 Set-ADUser -Identity $login -Add @{Proxyaddresses = "smtp:$smtp@simontbraun.eu"}
 
-$smtp2 = $firstname[0]+"."+$Lastname[0]
+$smtp2 = $firstname[0]+"."+$Lastname_clean[0]
 Set-ADUser -Identity $login -Add @{Proxyaddresses = "smtp:$smtp2@simontbraun.be"}
 Set-ADUser -Identity $login -Add @{Proxyaddresses = "smtp:$smtp2@simontbraun.eu"}
 
@@ -154,9 +134,56 @@ Set-ADUser -Identity $login -Replace @{extensionAttribute3 = $LinkedIn}
 Set-ADUser -Identity $login -Replace @{ipPhone =$DeskPhone }
 Set-ADUser -Identity $login -Replace @{telephoneNumber ="+32 2 533 1$DeskPhone" }
 
+Set-Location "\\braunbigwood.local\dfs\Personal"
+mkdir $login
 
 if ($role -eq "Lawyer" -or $role -eq "Partner") {
     $fileshare = "\\braunbigwood.local\dfs\Personal"
     $domain = "braunbigwood"
     createFolder $fileshare $login $domain
+    Set-ADUser $login -HomeDirectory $fileshare+"\"+$login -HomeDrive "X:"
 }
+
+Set-Location "\\SIBDC02\c$\_Scripts"
+.\DeltaSync.ps1
+
+Write-Host "syncing... this may take up to 2 minutes" -ForegroundColor Yellow -BackgroundColor Black
+Start-Sleep -Seconds 120
+
+$AZ_New_User = Get-AzureADuser -SearchString $login
+$AZ_Example_user = Get-AzureADUser -SearchString $example"@simontbraun.eu"
+
+$group_list = Get-AzureADUserMembership -ObjectId $AZ_Example_user.ObjectId
+
+foreach ($group in $group_list) {
+    $group.Mail
+    $typ = Get-MsolGroup -ObjectId $group.ObjectId
+    Write-host $typ.MailNickName "is AD synced"
+    if ($typ.DirSyncEnabled -eq $false) {
+        try {
+            Add-AzureADGroupMember -ObjectID $group.objectId -RefObjectID $AZ_New_User.ObjectId -verbose
+            Write-Host "adding Azure AD group" -ForegroundColor Yellow
+        }
+        catch {
+            Add-DistributionGroupMember -Identity $group.Mail -Member $AZ_New_User.UserPrincipalName
+            Write-Host "adding DL" -ForegroundColor Yellow
+        }
+    }
+
+}
+
+$licenses = (Get-MsolAccountSku | Where-Object { $_.SkuPartNumber -like "Win10_VDA_E3"}).AccountSkuId
+$user = Get-MsolUser -UserPrincipalName $login"@simontbraun.eu"
+  if ($null -ne $user) {
+    Set-MsolUserLicense -UserPrincipalName $userPrincipalName -AddLicenses $licenses
+  } else {
+    Write-Output "User $displayName ($userPrincipalName) not found."
+  }
+
+$licenses = (Get-MsolAccountSku | Where-Object { $_.SkuPartNumber -like "O365_BUSINESS_ESSENTIALS"}).AccountSkuId
+$user = Get-MsolUser -UserPrincipalName $login"@simontbraun.eu"
+  if ($null -ne $user) {
+    Set-MsolUserLicense -UserPrincipalName $userPrincipalName -AddLicenses $licenses
+  } else {
+    Write-Output "User $displayName ($userPrincipalName) not found."
+  }
