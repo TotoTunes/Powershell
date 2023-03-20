@@ -2,17 +2,34 @@ import-Module ActiveDirectory
 
 #Function to connect to the O365 tennant
 function M365_Connection {
+    Install-Module -Name ExchangeOnlineManagement -Scope AllUsers
     Install-Module MSOnline
     Import-Module MSOnline
     Install-Module AzureAD
     Import-Module AzureAD
-    $LiveCred = Get-Credential
-    $Session = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri https://outlook.office365.com/powershell-liveid/ -Credential $LiveCred -Authentication Basic -AllowRedirection
-    $importresults = Import-PSSession $Session -AllowClobber
-    Connect-MsolService -cred $LiveCred
-
-    Install-Module AzureAD
-    Connect-AzureAd -Credential $LiveCred
+    Write-host "Select if you want to connect with an MFA enabled account or not"
+    Write-Host "Select 1 for regular account"
+    Write-Host "Select 2 for MFA account"
+    $selection = Read-Host "Select 1 or 2: "
+    
+    switch ($selection) {
+        1 {
+            $LiveCred = Get-Credential
+            $Session = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri https://outlook.office365.com/powershell-liveid/ -Credential $LiveCred -Authentication Basic -AllowRedirection
+            $importresults = Import-PSSession $Session -AllowClobber
+            Connect-MsolService -cred $LiveCred
+            
+            Install-Module AzureAD
+            Connect-AzureAd -Credential $LiveCred
+        }
+        2 {
+            $login = Read-Host "enter your login"
+            Connect-AzureAd -AccountId $login
+            Connect-ExchangeOnline -UserPrincipalName $login
+            Connect-MsolService
+        }
+        Default {}
+    }
 
 }
 
@@ -48,8 +65,17 @@ function CreateFolder ($path, $username, $domain) {
 }
 
 Write-Host "Connecting to Office 365"
-#M365_Connection
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+M365_Connection
 Clear-Host
+
+#Fixed paramaters
+$Street = "Avenue Louise 250"
+$PO_Box = "10"
+$City = "Brussels"
+$State = "Bruxelles-Capitale"
+$ZipCode = "1050"
+$Country = "BE"
 
 #parameters for user creation
 $firstname = Read-Host "Enter the first name"
@@ -75,8 +101,8 @@ while ($office -eq "") {
 $language = Read-Host "What is the language for the user? (NL or FR or UK)"
 $role = Read-Host "What is the role of the user? (Lawyer, Counsel, Partner, Employee, Reception)"
 $LinkedIn = Read-Host "Paste the Linkedin URL here: "
-$Mobilephone = Read-Host "Enter mobile phone number"
 
+$Mobilephone = Read-Host "Enter mobile phone number"
 while ($null -eq $Mobilephone -or $Mobilephone -eq "") {
     $Mobilephone = Read-Host "Enter mobile phone number"
 }
@@ -88,22 +114,20 @@ while ($null -eq $DeskPhone -or $DeskPhone -eq "") {
 
 $password = Read-Host "enter the password for the new user" -AsSecureString
 $website = "www.simontbraun.eu"
-$Street = "Avenue Louise 250"
 #$LawyerOu = "OU=$language,OU=$role,OU=Lawyers,OU=Personal,OU=SimontBraun,DC=braunbigwood,DC=local"
 #$EmployeeOU = "OU=$Language,OU=Employees,OU=Personal,OU=SimontBraun,DC=braunbigwood,DC=local"
 
 $index = $example_user.DistinguishedName.IndexOf(",")
 $OU= $example_user.DistinguishedName.Substring($index+1)
 
-New-ADUser -Name $firstname" "$Lastname -Path $OU -SamAccountName $login -AccountPassword $password -DisplayName $firstname" "$Lastname -EmailAddress $UPN@simontbraun.eu -City $example_user.City -State $example_user.State -Country $example_user.Country -PostalCode $example_user.PostalCode -Office $office -Surname $Lastname -GivenName $firstname -StreetAddress $Street -Company $example_user.Company -Enabled $true -UserPrincipalName $login@simontbraun.eu
+New-ADUser -Name $firstname" "$Lastname -Path $OU -SamAccountName $login -AccountPassword $password -DisplayName $firstname" "$Lastname -EmailAddress $UPN@simontbraun.eu -City $City -State $State -Country $Country -PostalCode $ZipCode -Office $office -Surname $Lastname -GivenName $firstname -StreetAddress $Street -Company $example_user.Company -Enabled $true -UserPrincipalName $login@simontbraun.eu
 
 Get-ADuser -identity $example_user.SamAccountName -properties memberof | select-object memberof -expandproperty memberof | Add-AdGroupMember -Members $login
 
 Set-ADUser -Identity $login -DisplayName $firstname" "$Lastname -ScriptPath $example_user.ScriptPath -HomePage $website -Initials $Initials.ToUpper() -Add @{Proxyaddresses = "SMTP:$UPN@simontbraun.eu"}
 Set-ADUser -Identity $login -Description $Job
 Set-ADUser -Identity $login -Fax $example_user.Fax
-Set-ADUser -Identity $login -POBox $example_user.POBox
-Set-Aduser -Identity $login -Street $example_user.Street
+Set-ADUser -Identity $login -POBox $PO_Box
 Set-ADUser -Identity $login -HomePhone "+32 2 533 1$DeskPhone"
 Set-ADUser -Identity $login -Title $Job -Department $example_user.Department
 Set-ADUser -Identity $login -MobilePhone $Mobilephone 
@@ -150,7 +174,7 @@ Set-Location "\\SIBDC02\c$\_Scripts"
 Write-Host "syncing... this may take up to 2 minutes" -ForegroundColor Yellow -BackgroundColor Black
 Start-Sleep -Seconds 120
 
-$AZ_New_User = Get-AzureADuser -SearchString $login
+$AZ_New_User = Get-AzureADuser -SearchString $login"@simontbraun.eu"
 $AZ_Example_user = Get-AzureADUser -SearchString $example"@simontbraun.eu"
 
 $group_list = Get-AzureADUserMembership -ObjectId $AZ_Example_user.ObjectId
@@ -175,15 +199,15 @@ foreach ($group in $group_list) {
 $licenses = (Get-MsolAccountSku | Where-Object { $_.SkuPartNumber -like "Win10_VDA_E3"}).AccountSkuId
 $user = Get-MsolUser -UserPrincipalName $login"@simontbraun.eu"
   if ($null -ne $user) {
-    Set-MsolUserLicense -UserPrincipalName $userPrincipalName -AddLicenses $licenses
+    Set-MsolUserLicense -UserPrincipalName $user.UserPrincipalName -AddLicenses $licenses
   } else {
-    Write-Output "User $displayName ($userPrincipalName) not found."
+    Write-Output "User $displayName ($user.UserPrincipalName) not found."
   }
 
 $licenses = (Get-MsolAccountSku | Where-Object { $_.SkuPartNumber -like "O365_BUSINESS_ESSENTIALS"}).AccountSkuId
 $user = Get-MsolUser -UserPrincipalName $login"@simontbraun.eu"
   if ($null -ne $user) {
-    Set-MsolUserLicense -UserPrincipalName $userPrincipalName -AddLicenses $licenses
+    Set-MsolUserLicense -UserPrincipalName $user.UserPrincipalName -AddLicenses $licenses
   } else {
-    Write-Output "User $displayName ($userPrincipalName) not found."
+    Write-Output "User $displayName ($user.UserPrincipalName) not found."
   }
