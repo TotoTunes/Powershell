@@ -28,6 +28,6 @@ foreach ($m in $mails)
     }
     else {
         Write-Host "this mail will not be released" -ForegroundColor Red
-        Start-Sleep -Seconds 2
+        Start-Sleep -Seconds 1
     }
 }

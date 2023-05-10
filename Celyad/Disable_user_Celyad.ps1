@@ -69,7 +69,7 @@ M365_Connection
 Disable-ADAccount -Identity $login
 
 #remove AD groups
-$ADGroups = Get-ADPrincipalGroupMembership -Identity  $User | where {$_.Name -ne “Domain Users”}
+$ADGroups = Get-ADPrincipalGroupMembership -Identity  $AD | where {$_.Name -ne “Domain Users”}
 
 $ADGroups | Export-Csv -Path C:\Temp\ADGroups\$login'.csv'
 Write-Host "All AD groups have been exported to C:\Temp\ADGroups\username.csv"

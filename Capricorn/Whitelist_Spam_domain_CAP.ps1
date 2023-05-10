@@ -22,6 +22,6 @@ foreach ($m in $mails) {
     }
     else {
         Write-Host "this domain will not be whitelisted" -ForegroundColor Red
-        Start-Sleep -Seconds 2
+        Start-Sleep -Seconds 1
     }
 }
