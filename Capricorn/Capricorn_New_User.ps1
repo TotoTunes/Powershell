@@ -85,6 +85,16 @@ $numbers = (65..90) + (97..122) | Get-Random -Count 5
 $password = [string]($letters+$numbers+"!")
 $SecurePassword = ConvertTo-SecureString -String $password -AsPlainText -Force
 
+Try{
+    $AD =  Get-ADUser $Firstname -Properties * -ErrorAction Stop
+    Write-Host "User already exists" -ForegroundColor Red
+    exit
+    }
+    Catch [Microsoft.ActiveDirectory.Management.ADIdentityNotFoundException]
+    { 
+     Write-Host "Login is available" -ForegroundColor Green
+    }
+
 New-ADUser -Name $Firstname" "$Lastname -path $OU -SamAccountName $login -AccountPassword $SecurePassword ´
 -DisplayName $Firstname" "$Lastname -EmailAddress $login@capricorn.be ´
 -City $example_user.City -Country $example_user.Country -PostalCode $example_user.PostalCode ´
@@ -140,7 +150,7 @@ foreach ($group in $group_list) {
 $licenses = (Get-MsolAccountSku | Where-Object { $_.SkuPartNumber -like "SPE_E3"}).AccountSkuId
 $user = Get-MsolUser -UserPrincipalName $login"@capricorn.be"
   if ($user -ne $null) {
-    Set-MsolUserLicense -UserPrincipalName $userPrincipalName -AddLicenses $licenses
+    Set-MsolUserLicense -UserPrincipalName "$login@capricorn.be" -AddLicenses $licenses
   } else {
-    Write-Output "User $displayName ($userPrincipalName) not found."
+    Write-Output "User $displayName (""$login@capricorn.be"") not found."
   }

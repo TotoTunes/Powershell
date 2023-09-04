@@ -15,7 +15,7 @@ Connect-Exchangeonline
 }
 
 $path = Read-host "Enter \\path\filename.csv"
-$mails = Import-Csv -Path $path -Header "Identity","SenderAddress","Subject","ReceivedTime","Release" -Delimiter ";"
+$mails = Import-Csv -Path $path -Header "Identity","SenderAddress","Subject","ReleaseStatus","ReceivedTime","Release" -Delimiter ";"
 foreach ($m in $mails) 
 {
     Write-Host $m.SenderAddress
