@@ -2,36 +2,21 @@ import-Module ActiveDirectory
 
 #Function to connect to the O365 tennant
 function M365_Connection {
-    Install-Module -Name ExchangeOnlineManagement -Scope AllUsers
     Install-Module MSOnline
     Import-Module MSOnline
     Install-Module AzureAD
     Import-Module AzureAD
-    Write-host "Select if you want to connect with an MFA enabled account or not"
-    Write-Host "Select 1 for regular account"
-    Write-Host "Select 2 for MFA account"
-    $selection = Read-Host "Select 1 or 2: "
-    
-    switch ($selection) {
-        1 {
-            $LiveCred = Get-Credential
-            $Session = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri https://outlook.office365.com/powershell-liveid/ -Credential $LiveCred -Authentication Basic -AllowRedirection
-            $importresults = Import-PSSession $Session -AllowClobber
-            Connect-MsolService -cred $LiveCred
-            
-            Install-Module AzureAD
-            Connect-AzureAd -Credential $LiveCred
-        }
-        2 {
-            $login = Read-Host "enter your login"
-            Connect-AzureAd -AccountId $login
-            Connect-ExchangeOnline -UserPrincipalName $login
-            Connect-MsolService
-        }
-        Default {}
-    }
+    Install-Module -Name ExchangeOnlineManagement -Scope AllUsers
+    $LiveCred = Get-Credential
+    $Session = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri https://outlook.office365.com/powershell-liveid/ -Credential $LiveCred -Authentication Basic -AllowRedirection
+    $importresults = Import-PSSession $Session -AllowClobber
+    Connect-MsolService -cred $LiveCred
+    Install-Module AzureAD
+    Connect-AzureAd -Credential $LiveCred
+    Connect-ExchangeOnline -cred $LiveCred
 
 }
+
 
 function GetExampleUser ($ex) {
 
@@ -57,7 +42,7 @@ function CreateFolder ($path, $username, $domain) {
     $user = $domain + "\" + $username
     Write-Host $user
     $acl = get-acl -path $fullpath
-    $new = $user, ”FullControl”, ”ContainerInherit,ObjectInherit”, ”None”, ”Allow”
+    $new = $user, "FullControl", "ContainerInherit,ObjectInherit", "None", "Allow"
     $accessRule = new-object System.Security.AccessControl.FileSystemAccessRule $new
     $acl.AddAccessRule($accessRule)
     $acl | Set-Acl $fullpath
@@ -66,7 +51,27 @@ function CreateFolder ($path, $username, $domain) {
 
 Write-Host "Connecting to Office 365"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-M365_Connection
+#M365_Connection
+Write-host "Select if you want to connect with an MFA enabled account or not"
+Write-Host "Select 1 for regular account"
+Write-Host "Select 2 for MFA account"
+$selection = Read-Host "Select 1 or 2: "
+
+switch ($selection) {
+    1 {
+        M365_Connection
+    }
+    2 {
+        $cred = Get-Credential
+        $login = $cred.UserName.ToString()
+        #$cred = ConvertTo-SecureString -String $login.ToString()
+        Connect-AzureAd -AccountId $login
+        Connect-ExchangeOnline -UserPrincipalName $login
+        Connect-MsolService -Credential $cred
+    
+    }
+    Default {}
+}
 Clear-Host
 
 #Fixed paramaters
@@ -88,10 +93,10 @@ $UPN = $firstname.ToLower()+"."+$Lastname_clean.ToLower()
 $example = Read-Host "Example user"
 $example_user = GetExampleUser($example)
 
-$Job = Read-Host "Enter the Job title of the new user"
+<#$Job = Read-Host "Enter the Job title of the new user"
 while ($Job -eq "") {
     $Job = Read-Host "Enter the Job title of the new user"
-}
+}#>
 
 $office = Read-Host "What is the office of the user?"
 while ($office -eq "") {
@@ -125,11 +130,11 @@ New-ADUser -Name $firstname" "$Lastname -Path $OU -SamAccountName $login -Accoun
 Get-ADuser -identity $example_user.SamAccountName -properties memberof | select-object memberof -expandproperty memberof | Add-AdGroupMember -Members $login
 
 Set-ADUser -Identity $login -DisplayName $firstname" "$Lastname -ScriptPath $example_user.ScriptPath -HomePage $website -Initials $Initials.ToUpper() -Add @{Proxyaddresses = "SMTP:$UPN@simontbraun.eu"}
-Set-ADUser -Identity $login -Description $Job
+Set-ADUser -Identity $login -Description $role
 Set-ADUser -Identity $login -Fax $example_user.Fax
 Set-ADUser -Identity $login -POBox $PO_Box
 Set-ADUser -Identity $login -HomePhone "+32 2 533 1$DeskPhone"
-Set-ADUser -Identity $login -Title $Job -Department $example_user.Department
+Set-ADUser -Identity $login -Title $role -Department $example_user.Department
 Set-ADUser -Identity $login -MobilePhone $Mobilephone 
 
 
@@ -153,7 +158,7 @@ $smtp3 = $firstname+"."+ $Lastname[0]
 Set-ADUser -Identity $login -Add @{Proxyaddresses = "smtp:$smtp3@simontbraun.be"}
 Set-ADUser -Identity $login -Add @{Proxyaddresses = "smtp:$smtp3@simontbraun.eu"}
 
-Set-ADUser -Identity $login -Replace @{extensionAttribute1 = $Job}
+Set-ADUser -Identity $login -Replace @{extensionAttribute1 = $role}
 Set-ADUser -Identity $login -Replace @{extensionAttribute3 = $LinkedIn}
 Set-ADUser -Identity $login -Replace @{ipPhone =$DeskPhone }
 Set-ADUser -Identity $login -Replace @{telephoneNumber ="+32 2 533 1$DeskPhone" }
@@ -182,7 +187,7 @@ $group_list = Get-AzureADUserMembership -ObjectId $AZ_Example_user.ObjectId
 foreach ($group in $group_list) {
     $group.Mail
     $typ = Get-MsolGroup -ObjectId $group.ObjectId
-    Write-host $typ.MailNickName "is AD synced"
+    Write-host $typ.DisplayName "is AD synced"
     if ($typ.DirSyncEnabled -eq $false) {
         try {
             Add-AzureADGroupMember -ObjectID $group.objectId -RefObjectID $AZ_New_User.ObjectId -verbose
