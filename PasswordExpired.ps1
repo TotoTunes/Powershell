@@ -1,0 +1,2 @@
+$MinimumDate = ((Get-Date).AddYears(-1))
+Get-ADUser -Filter 'Enabled -eq $true' -Properties * | Where-Object {$_.PasswordLastSet -lt $MinimumDate}  |select Name,PasswordLastSet | Export-Csv -Path c:\temp\PasswordChange.csv -NoTypeInformation -NoClobber -Delimiter ";"
