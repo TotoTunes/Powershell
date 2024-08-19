@@ -1,13 +1,13 @@
 function M365_Connection {
-    Install-Module MSOnline
+    Install-Module MSOnline -Scope Currentuser -Confirm
     Import-Module MSOnline
-    Install-Module AzureAD
+    Install-Module AzureAD -Scope Currentuser -Confirm
     Import-Module AzureAD
     $LiveCred = Get-Credential
     $Session = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri https://outlook.office365.com/powershell-liveid/ -Credential $LiveCred -Authentication Basic -AllowRedirection
     $importresults = Import-PSSession $Session -AllowClobber
     Connect-MsolService -cred $LiveCred
-    Install-Module AzureAD
+    Install-Module AzureAD -Scope Currentuser -Confirm
     Connect-AzureAd -Credential $LiveCred
     Connect-ExchangeOnline -cred $LiveCred
 

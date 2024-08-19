@@ -112,9 +112,9 @@ while ($null -eq $Mobilephone -or $Mobilephone -eq "") {
     $Mobilephone = Read-Host "Enter mobile phone number"
 }
 
-$DeskPhone = Read-Host "Enter DESK phone number"
-while ($null -eq $DeskPhone -or $DeskPhone -eq "") {
-    $DeskPhone = Read-Host "Enter DESK phone number"
+$Phone = Read-Host "Enter DESK phone number"
+while ($null -eq $Phone -or $Phone -eq "") {
+    $Phone = Read-Host "Enter DESK phone number"
 }
 
 $password = Read-Host "enter the password for the new user" -AsSecureString
@@ -133,6 +133,7 @@ Set-ADUser -Identity $login -DisplayName $firstname" "$Lastname -ScriptPath $exa
 Set-ADUser -Identity $login -Description $role
 Set-ADUser -Identity $login -Fax $example_user.Fax
 Set-ADUser -Identity $login -POBox $PO_Box
+$DeskPhone = $Phone.Substring(0,1) + " "+ $Phone.Substring(1,2)
 Set-ADUser -Identity $login -HomePhone "+32 2 533 1$DeskPhone"
 Set-ADUser -Identity $login -Title $role -Department $example_user.Department
 Set-ADUser -Identity $login -MobilePhone $Mobilephone 
@@ -200,16 +201,16 @@ foreach ($group in $group_list) {
     }
 
 }
-
-$licenses = (Get-MsolAccountSku | Where-Object { $_.SkuPartNumber -like "Win10_VDA_E3"}).AccountSkuId
+Add-DistributionGroupMember -Identity "Signature 365 users" -Member "$login@simontbraun.eu" -Confirm:$false
+<#$licenses = (Get-MsolAccountSku | Where-Object { $_.SkuPartNumber -like "Win10_VDA_E3"}).AccountSkuId
 $user = Get-MsolUser -UserPrincipalName $login"@simontbraun.eu"
   if ($null -ne $user) {
     Set-MsolUserLicense -UserPrincipalName $user.UserPrincipalName -AddLicenses $licenses
   } else {
     Write-Output "User $displayName ($user.UserPrincipalName) not found."
-  }
+  }#>
 
-$licenses = (Get-MsolAccountSku | Where-Object { $_.SkuPartNumber -like "O365_BUSINESS_ESSENTIALS"}).AccountSkuId
+$licenses = (Get-MsolAccountSku | Where-Object { $_.SkuPartNumber -like "SPB"}).AccountSkuId
 $user = Get-MsolUser -UserPrincipalName $login"@simontbraun.eu"
   if ($null -ne $user) {
     Set-MsolUserLicense -UserPrincipalName $user.UserPrincipalName -AddLicenses $licenses
