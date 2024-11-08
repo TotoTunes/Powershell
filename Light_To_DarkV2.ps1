@@ -24,6 +24,4 @@ $taskbar = Read-Host -Prompt 'Dow you want to change the taskbar color as well? 
 if ($taskbar -eq "Y") {
 Set-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name SystemusesLightTheme -Value 0
 }
-
-
 }
