@@ -148,47 +148,47 @@ if ($OU.Substring(3,3).Replace(",","") -ne $Language)
 }
 
 
-New-ADUser -Name $firstname" "$Lastname -Path $Corrected_OU -SamAccountName $username -AccountPassword $password -DisplayName $firstname" "$Lastname -EmailAddress $UPN@simontbraun.eu -City $City -State $State -Country $Country -PostalCode $ZipCode -Office $office -Surname $Lastname -GivenName $firstname -StreetAddress $Street -Company $example_user.Company -Enabled $true -UserPrincipalName $login@simontbraun.eu
+New-ADUser -Name $firstname" "$Lastname -Path $Corrected_OU -SamAccountName $username -AccountPassword $password -DisplayName $firstname" "$Lastname -EmailAddress $UPN@simontbraun.eu -City $City -State $State -Country $Country -PostalCode $ZipCode -Office $office -Surname $Lastname -GivenName $firstname -StreetAddress $Street -Company $example_user.Company -Enabled $true -UserPrincipalName $username@simontbraun.eu
 
 Get-ADuser -identity $example_user.SamAccountName -properties memberof | select-object memberof -expandproperty memberof | Add-AdGroupMember -Members $login
 
-Set-ADUser -Identity $login -DisplayName $firstname" "$Lastname -ScriptPath $example_user.ScriptPath -HomePage $website -Initials $Initials.ToUpper() -Add @{Proxyaddresses = "SMTP:$UPN@simontbraun.eu"}
-Set-ADUser -Identity $login -Description $role
-Set-ADUser -Identity $login -Fax $example_user.Fax
-Set-ADUser -Identity $login -POBox $PO_Box
+Set-ADUser -Identity $username -DisplayName $firstname" "$Lastname -ScriptPath $example_user.ScriptPath -HomePage $website -Initials $Initials.ToUpper() -Add @{Proxyaddresses = "SMTP:$UPN@simontbraun.eu"}
+Set-ADUser -Identity $username -Description $role
+Set-ADUser -Identity $username -Fax $example_user.Fax
+Set-ADUser -Identity $username -POBox $PO_Box
 $DeskPhone = $Phone.Insert(1," ")
-Set-ADUser -Identity $login -HomePhone "+32 2 533 1$DeskPhone"
-Set-ADUser -Identity $login -Title $role -Department $example_user.Department
-Set-ADUser -Identity $login -MobilePhone $Mobilephone 
+Set-ADUser -Identity $username -HomePhone "+32 2 533 1$DeskPhone"
+Set-ADUser -Identity $username -Title $role -Department $example_user.Department
+Set-ADUser -Identity $username -MobilePhone $Mobilephone 
 
 
-Set-ADUser -Identity $login -Add @{Proxyaddresses = "smtp:$UPN@simontbraun.be"}
+Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$UPN@simontbraun.be"}
 
-Set-ADUser -Identity $login -Add @{Proxyaddresses = "smtp:$login@simontbraun.eu"}
-Set-ADUser -Identity $login -Add @{Proxyaddresses = "smtp:$login@simontbraun.be"}
+Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$username@simontbraun.eu"}
+Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$username@simontbraun.be"}
 
-Set-ADUser -Identity $login -Add @{Proxyaddresses = "smtp:$Initials@simontbraun.be"}
-Set-ADUser -Identity $login -Add @{Proxyaddresses = "smtp:$Initials@simontbraun.eu"}
+Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$Initials@simontbraun.be"}
+Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$Initials@simontbraun.eu"}
 
 $smtp=$firstname[0]+"."+$Lastname_clean
-Set-ADUser -Identity $login -Add @{Proxyaddresses = "smtp:$smtp@simontbraun.be"}
-Set-ADUser -Identity $login -Add @{Proxyaddresses = "smtp:$smtp@simontbraun.eu"}
+Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$smtp@simontbraun.be"}
+Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$smtp@simontbraun.eu"}
 
 $smtp2 = $firstname[0]+"."+$Lastname_clean[0]
-Set-ADUser -Identity $login -Add @{Proxyaddresses = "smtp:$smtp2@simontbraun.be"}
-Set-ADUser -Identity $login -Add @{Proxyaddresses = "smtp:$smtp2@simontbraun.eu"}
+Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$smtp2@simontbraun.be"}
+Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$smtp2@simontbraun.eu"}
 
 $smtp3 = $firstname+"."+ $Lastname[0]
-Set-ADUser -Identity $login -Add @{Proxyaddresses = "smtp:$smtp3@simontbraun.be"}
-Set-ADUser -Identity $login -Add @{Proxyaddresses = "smtp:$smtp3@simontbraun.eu"}
+Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$smtp3@simontbraun.be"}
+Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$smtp3@simontbraun.eu"}
 
-Set-ADUser -Identity $login -Add @{extensionAttribute1 = $Job}
-Set-ADUser -Identity $login -Add @{extensionAttribute3 = $LinkedIn}
-Set-ADUser -Identity $login -Add @{ipPhone =$Phone}
-Set-ADUser -Identity $login -Add @{telephoneNumber ="+32 2 533 1$DeskPhone" }
+Set-ADUser -Identity $username Replace @{extensionAttribute1 = $role}
+Set-ADUser -Identity $username -Replace @{extensionAttribute3 = $LinkedIn}
+Set-ADUser -Identity $username -Replace @{ipPhone =$Phone}
+Set-ADUser -Identity $username -Add @{telephoneNumber ="+32 2 533 1$DeskPhone" }
 
 Set-Location "\\braunbigwood.local\dfs\Personal"
-mkdir $login
+mkdir $username
 
 if ($role -eq "Lawyer" -or $role -eq "Partner") {
     $fileshare = "\\braunbigwood.local\dfs\Personal"
