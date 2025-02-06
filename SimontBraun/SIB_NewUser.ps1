@@ -2,37 +2,87 @@ import-Module ActiveDirectory
 
 #Function to connect to the O365 tennant
 function M365_Connection {
+    $login = Read-Host "enter your login"
     Install-Module -Name ExchangeOnlineManagement -Scope AllUsers -Force
     Install-Module MSOnline
     Import-Module MSOnline
     Install-Module AzureAD
     Import-Module AzureAD
-    
-    switch ($selection) {
-        1 {
-            $LiveCred = Get-Credential
-            $Session = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri https://outlook.office365.com/powershell-liveid/ -Credential $LiveCred -Authentication Basic -AllowRedirection
-            $importresults = Import-PSSession $Session -AllowClobber
-            Connect-MsolService -cred $LiveCred
-            
-            Install-Module AzureAD
-            Connect-AzureAd -Credential $LiveCred
-        }
-        2 {
-            $login = Read-Host "enter your login"
-            Connect-AzureAd -AccountId $login
-            Connect-ExchangeOnline -UserPrincipalName $login
-            Connect-MsolService
-        }
-        Default {}
-    }
-
+    Connect-AzureAd -AccountId $login
+    Connect-ExchangeOnline -UserPrincipalName $login
+    Connect-MsolService
 }
 
+#function to remove special letters from the names (eg: ê, ë, à, ü,...)
+function Remove-StringDiacritic {
+    <#
+.SYNOPSIS
+    This function will remove the diacritics (accents) characters from a string.
+
+.DESCRIPTION
+    This function will remove the diacritics (accents) characters from a string.
+
+.PARAMETER String
+    Specifies the String(s) on which the diacritics need to be removed
+
+.PARAMETER NormalizationForm
+    Specifies the normalization form to use
+    https://msdn.microsoft.com/en-us/library/system.text.normalizationform(v=vs.110).aspx
+
+.EXAMPLE
+    PS C:\> Remove-StringDiacritic "L'été de Raphaël"
+
+    L'ete de Raphael
+
+.NOTES
+    Francois-Xavier Cat
+    @lazywinadmin
+    lazywinadmin.com
+    github.com/lazywinadmin
+#>
+    [CMdletBinding()]
+    PARAM
+    (
+        [ValidateNotNullOrEmpty()]
+        [Alias('Text')]
+        [System.String[]]$String,
+        [System.Text.NormalizationForm]$NormalizationForm = "FormD"
+    )
+
+    FOREACH ($StringValue in $String) {
+        Write-Verbose -Message "$StringValue"
+        try {
+            # Normalize the String
+            $Normalized = $StringValue.Normalize($NormalizationForm)
+            $NewString = New-Object -TypeName System.Text.StringBuilder
+
+            # Convert the String to CharArray
+            $normalized.ToCharArray() |
+                ForEach-Object -Process {
+                    if ([Globalization.CharUnicodeInfo]::GetUnicodeCategory($psitem) -ne [Globalization.UnicodeCategory]::NonSpacingMark) {
+                        [void]$NewString.Append($psitem)
+                    }
+                }
+
+            #Combine the new string chars
+            Write-Output $($NewString -as [string])
+        }
+        Catch {
+            Write-Error -Message $Error[0].Exception.Message
+        }
+    }
+}
+
+#function to get the example user + check if user is in disabled OU or not
 function GetExampleUser ($ex) {
 
     Try {
         $AD = Get-ADUser $ex -Properties * -ErrorAction Stop
+        if ( $AD.DistinguishedName -like "*Shared Mailbox*" -or $AD.DistinguishedName -like "*Disabled users*") {
+            Write-Host "user has been disbled, please choose an active user"
+            $example = Read-Host "Enter the example user"
+            GetExampleUser($example)
+        }
         Write-Host "User found" -ForegroundColor Green
         return $AD
     }
@@ -43,9 +93,26 @@ function GetExampleUser ($ex) {
         GetExampleUser($example)
 
     }
-    return $AD
-    
+    return $AD 
 }
+
+# function to check if the new username is already taken or not
+function CheckUsername ($ex) {
+    $ex = Remove-StringDiacritic -String $ex
+
+    Try {
+        $AD = Get-ADUser $ex -Properties * -ErrorAction Stop
+        Write-Host "Username already exists" -ForegroundColor Red
+        $userlogin = Read-Host "Enther the username"
+        CheckUsername($userlogin)
+    }
+    Catch [Microsoft.ActiveDirectory.Management.ADIdentityNotFoundException] { 
+        Write-Host "Username is free" -ForegroundColor Green
+        $AD = $userlogin
+        return $AD
+    }
+} 
+#Function to create a folder on the SIB server
 function CreateFolder ($path, $username, $domain) {
 
     $fullpath = $path + "\" + $username
@@ -62,12 +129,8 @@ function CreateFolder ($path, $username, $domain) {
 
 Write-Host "Connecting to Office 365"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-#M365_Connection
-$login = Read-Host "enter your login"
-Connect-AzureAd -AccountId $login
-Connect-ExchangeOnline -UserPrincipalName $login
-Connect-MsolService
-Clear-Host
+
+M365_Connection
 
 #Fixed paramaters
 $Street = "Avenue Louise 250"
@@ -77,6 +140,7 @@ $State = "Bruxelles-Capitale"
 $ZipCode = "1050"
 $Country = "BE"
 $website = "www.simontbraun.eu"
+$Fax = "+32 2 533 17 90"
 
 #parameters for user creation
 $firstname = Read-Host "Enter the first name"
@@ -89,26 +153,24 @@ while ($Lastname -eq "") {
    $Lastname = Read-Host "Enter the Last name"
 }
 
-$username = Read-Host "Enther the username"
-while ($username -eq "") {
-    $username = Read-Host "Enther the username"
-}
+$userlogin = Read-Host "Enther the username"
+$username = CheckUsername($userlogin)
 
 $I = Read-Host "Enter the Initials for the user"
 while ($I -eq "") {
     $I = Read-Host "Enter the Initials for the user"
 }
 
+#set initials to capital letters
 $Initials = $I.ToUpper()
+
+#clean up last name
 $Lastname_clean = $Lastname.Trim() -replace "\s"
+
+#remove capital letters from first and last name
 $UPN = $firstname.ToLower()+"."+$Lastname_clean.ToLower()
 $example = Read-Host "Example user"
 $example_user = GetExampleUser($example)
-
-<#$Department = Read-Host "Enter the Departement of the new user"
-while ($Department -eq "") {
-    $Department = Read-Host "Enter the Departement of the new user"
-}#>
 
 $role = Read-Host "What is the role of the user? (Lawyer, Counsel, Partner, Associate, Reception or Student?)"
 while ($role -eq "") {
@@ -121,6 +183,7 @@ while ($office -eq "") {
 }
 
 $language = Read-Host "What is the language for the user? (NL or FR or UK)"
+
 $LinkedIn = Read-Host "Paste the Linkedin URL here: "
 while ($LinkedIn -eq "") {
     $LinkedIn = Read-Host "Paste the Linkedin URL here: " 
@@ -137,9 +200,8 @@ while ($null -eq $Phone -or $Phone -eq "") {
 }
 
 $password = Read-Host "enter the password for the new user" -AsSecureString
-#$LawyerOu = "OU=$language,OU=$role,OU=Lawyers,OU=Personal,OU=SimontBraun,DC=braunbigwood,DC=local"
-#$EmployeeOU = "OU=$Language,OU=Employees,OU=Personal,OU=SimontBraun,DC=braunbigwood,DC=local"
 
+#steps to place the user in the correct OU based on their language
 [int]$index = $example_user.DistinguishedName.IndexOf(",")
 $OU= $example_user.DistinguishedName.Substring($index+1)
 if ($OU.Substring(3,3).Replace(",","") -ne $Language)
@@ -147,14 +209,16 @@ if ($OU.Substring(3,3).Replace(",","") -ne $Language)
     $Corrected_OU = $OU.Replace(($OU.Substring(3,3).Replace(",","")),$Language)
 }
 
-
+#User creation with, firstname, lastname, OU, SamAccountname, password, displayname, email, UPN, Country, Postal code, zip code, adres, company
 New-ADUser -Name $firstname" "$Lastname -Path $Corrected_OU -SamAccountName $username -AccountPassword $password -DisplayName $firstname" "$Lastname -EmailAddress $UPN@simontbraun.eu -City $City -State $State -Country $Country -PostalCode $ZipCode -Office $office -Surname $Lastname -GivenName $firstname -StreetAddress $Street -Company $example_user.Company -Enabled $true -UserPrincipalName $username@simontbraun.eu
 
+#copy user to the same AD groups as the example user
 Get-ADuser -identity $example_user.SamAccountName -properties memberof | select-object memberof -expandproperty memberof | Add-AdGroupMember -Members $login
 
-Set-ADUser -Identity $username -DisplayName $firstname" "$Lastname -ScriptPath $example_user.ScriptPath -HomePage $website -Initials $Initials.ToUpper() -Add @{Proxyaddresses = "SMTP:$UPN@simontbraun.eu"}
+
+Set-ADUser -Identity $username -ScriptPath $example_user.ScriptPath -HomePage $website -Initials $Initials.ToUpper() -Add @{Proxyaddresses = "SMTP:$UPN@simontbraun.eu"}
 Set-ADUser -Identity $username -Description $role
-Set-ADUser -Identity $username -Fax $example_user.Fax
+Set-ADUser -Identity $username -Fax $Fax
 Set-ADUser -Identity $username -POBox $PO_Box
 $DeskPhone = $Phone.Insert(1," ")
 Set-ADUser -Identity $username -HomePhone "+32 2 533 1$DeskPhone"
@@ -170,15 +234,15 @@ Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$username@simontbra
 Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$Initials@simontbraun.be"}
 Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$Initials@simontbraun.eu"}
 
-$smtp=$firstname[0]+"."+$Lastname_clean
+$smtp= Remove-StringDiacritic -String $firstname[0]+"."+$Lastname_clean
 Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$smtp@simontbraun.be"}
 Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$smtp@simontbraun.eu"}
 
-$smtp2 = $firstname[0]+"."+$Lastname_clean[0]
+$smtp2 = Remove-StringDiacritic -String $firstname[0]+"."+$Lastname_clean[0]
 Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$smtp2@simontbraun.be"}
 Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$smtp2@simontbraun.eu"}
 
-$smtp3 = $firstname+"."+ $Lastname[0]
+$smtp3 = Remove-StringDiacritic -String $firstname+"."+ $Lastname[0]
 Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$smtp3@simontbraun.be"}
 Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$smtp3@simontbraun.eu"}
 

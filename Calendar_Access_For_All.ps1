@@ -1,27 +1,29 @@
+$users = Get-Mailbox -Resultsize Unlimited | Select-Object Name, UserPrincipalName
 
+foreach ($user in $users) {
+    $mailbox = $user.UserPrincipalName + ":\Calendar"
+    try {
+        Write-Host -ForegroundColor green Setting permission for $mailbox
+        Set-MailboxFolderPermission -Identity $mailbox -User Default -AccessRights Reviewer -ErrorAction Stop
+        Add-MailboxFolderPermission -Identity $mailbox -User Default -AccessRights Reviewer
+        Get-MailboxFolderPermission -Identity $mailbox -User Default 
+    }
+    catch {
 
-
-foreach ($user in $users)
-{
-   try {
-    Write-Host -ForegroundColor green Setting permission for $($user.alias)
-    Add-MailboxFolderPermission -Identity $($user.alias):\calendar -User Default -AccessRights Reviewer -ErrorAction SilentlyContinue
-    Set-MailboxFolderPermission -Identity $($user.alias):\calendar -User Default -AccessRights Reviewer
-   }
-   catch {
-    { 
         try {
-            Write-Host -ForegroundColor green Setting permission for $($user.alias)
-            Add-MailboxFolderPermission -Identity $($user.alias):\Agenda -User Default -AccessRights Reviewer -ErrorAction SilentlyContinue
-            Set-MailboxFolderPermission -Identity $($user.alias):\Agenda -User Default -AccessRights Reviewer
-            }
+            $mailbox = $user.UserPrincipalName + ":\Agenda"
+            Write-Host -ForegroundColor green Setting permission for $mailbox
+            Set-MailboxFolderPermission -Identity $mailbox -User Default -AccessRights Reviewer -ErrorAction Stop
+            Add-MailboxFolderPermission -Identity $mailbox -User Default -AccessRights Reviewer
+            Get-MailboxFolderPermission -Identity $mailbox -User Default 
+        }
         catch {
-            {
-                Write-Host -ForegroundColor green Setting permission for $($user.alias)
-                Add-MailboxFolderPermission -Identity $($user.alias):\Calendrier -User Default -AccessRights Reviewer -ErrorAction SilentlyContinue
-                Set-MailboxFolderPermission -Identity $($user.alias):\Calendrier -User Default -AccessRights Reviewer
-            }
+                    
+            $mailbox = $user.UserPrincipalName + ":\Calendrier"
+            Write-Host -ForegroundColor green Setting permission for $mailbox
+            Set-MailboxFolderPermission -Identity $mailbox -User Default -AccessRights Reviewer -ErrorAction SilentlyContinue
+            Add-MailboxFolderPermission -Identity $mailbox -User Default -AccessRights Reviewer -ErrorAction SilentlyContinue
+            Get-MailboxFolderPermission -Identity $mailbox -User Default                     
         }
     }
-   }
 }
