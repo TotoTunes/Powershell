@@ -11,6 +11,7 @@ function M365_Connection {
     Connect-AzureAd -AccountId $login
     Connect-ExchangeOnline -UserPrincipalName $login
     Connect-MsolService
+    cls
 }
 
 #function to remove special letters from the names (eg: ê, ë, à, ü,...)
@@ -79,7 +80,7 @@ function GetExampleUser ($ex) {
     Try {
         $AD = Get-ADUser $ex -Properties * -ErrorAction Stop
         if ( $AD.DistinguishedName -like "*Shared Mailbox*" -or $AD.DistinguishedName -like "*Disabled users*") {
-            Write-Host "user has been disbled, please choose an active user"
+            Write-Host "user has been disabled, please choose an active user"
             $example = Read-Host "Enter the example user"
             GetExampleUser($example)
         }
@@ -108,7 +109,7 @@ function CheckUsername ($ex) {
     }
     Catch [Microsoft.ActiveDirectory.Management.ADIdentityNotFoundException] { 
         Write-Host "Username is free" -ForegroundColor Green
-        $AD = $userlogin
+        $AD = $ex
         return $AD
     }
 } 
@@ -155,6 +156,7 @@ while ($Lastname -eq "") {
 
 $userlogin = Read-Host "Enther the username"
 $username = CheckUsername($userlogin)
+
 
 $I = Read-Host "Enter the Initials for the user"
 while ($I -eq "") {
