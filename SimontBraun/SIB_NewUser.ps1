@@ -74,6 +74,37 @@ function Remove-StringDiacritic {
     }
 }
 
+#function to start logging
+function Start-Logging {
+    $CurrentDateTime = Get-Date -Format "dd-MM-yyyy"
+    $FileNameBase = "NewUserLogs"
+    $FileExtension = "txt"
+    $logpath = "C:\temp\"
+    $FileName = "$($FileNameBase)_$($CurrentDateTime).$($FileExtension)"
+    if (Test-Path $logfile) {
+        Remove-Item $logfile -Force
+    }
+    New-Item -Path $logpath -Name $FileName -ItemType File
+    Start-Transcript -Path $logfile -Append
+    Write-Host "Logging started" -ForegroundColor Green
+}
+
+<# $OutputDirectory = "C:\Temp\MyLogs"
+
+# 2. Get the current date and time and format it for use in a filename.
+#    The format 'yyyyMMdd_HHmmss' ensures a consistent, sortable filename
+#    (e.g., 20250627_153045).
+$CurrentDateTime = Get-Date -Format "yyyyMMdd_HHmmss"
+
+# 3. Define the base name for your file.
+$FileNameBase = "MyDynamicFile"
+
+# 4. Define the file extension.
+$FileExtension = "txt"
+
+# 5. Construct the full filename using the base name, current date/time, and extension.
+$FileName = "$($FileNameBase)_$($CurrentDateTime).$($FileExtension)"
+#>
 #function to get the example user + check if user is in disabled OU or not
 function GetExampleUser ($ex) {
 
@@ -114,19 +145,7 @@ function CheckUsername ($ex) {
     }
 } 
 #Function to create a folder on the SIB server
-function CreateFolder ($path, $username, $domain) {
-
-    $fullpath = $path + "\" + $username
-    Write-Host $fullpath
-    $user = $domain + "\" + $username
-    Write-Host $user
-    $acl = get-acl -path $fullpath
-    $new = $user, ”FullControl”, ”ContainerInherit,ObjectInherit”, ”None”, ”Allow”
-    $accessRule = new-object System.Security.AccessControl.FileSystemAccessRule $new
-    $acl.AddAccessRule($accessRule)
-    $acl | Set-Acl $fullpath
-    Write-Host "the folder $fullpath is created" -ForegroundColor Yellow
-}
+ 
 
 Write-Host "Connecting to Office 365"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -174,10 +193,10 @@ $UPN = $firstname.ToLower()+"."+$Lastname_clean.ToLower()
 $example = Read-Host "Example user"
 $example_user = GetExampleUser($example)
 
-$role = Read-Host "What is the role of the user? (Lawyer, Counsel, Partner, Associate, Reception or Student?)"
+<#$role = Read-Host "What is the role of the user? (Lawyer, Counsel, Partner, Associate, Reception or Student?)"
 while ($role -eq "") {
     $role = Read-Host "What is the role of the user? (Lawyer, Counsel, Partner, Associate, Reception or Student?)"
-}
+}#>
 
 $office = Read-Host "What is the office of the user?"
 while ($office -eq "") {
@@ -186,15 +205,6 @@ while ($office -eq "") {
 
 $language = Read-Host "What is the language for the user? (NL or FR or UK)"
 
-$LinkedIn = Read-Host "Paste the Linkedin URL here: "
-while ($LinkedIn -eq "") {
-    $LinkedIn = Read-Host "Paste the Linkedin URL here: " 
-}
-
-$Mobilephone = Read-Host "Enter mobile phone number"
-while ($null -eq $Mobilephone -or $Mobilephone -eq "") {
-    $Mobilephone = Read-Host "Enter mobile phone number"
-}
 
 $Phone = Read-Host "Enter DESK phone number"
 while ($null -eq $Phone -or $Phone -eq "") {
@@ -222,10 +232,7 @@ Set-ADUser -Identity $username -ScriptPath $example_user.ScriptPath -HomePage $w
 Set-ADUser -Identity $username -Description $role
 Set-ADUser -Identity $username -Fax $Fax
 Set-ADUser -Identity $username -POBox $PO_Box
-$DeskPhone = $Phone.Insert(1," ")
-Set-ADUser -Identity $username -HomePhone "+32 2 533 1$DeskPhone"
 Set-ADUser -Identity $username -Title $role -Department $example_user.Department
-Set-ADUser -Identity $username -MobilePhone $Mobilephone 
 
 
 Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$UPN@simontbraun.be"}
@@ -248,10 +255,6 @@ $smtp3 = Remove-StringDiacritic -String $firstname+"."+ $Lastname[0]
 Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$smtp3@simontbraun.be"}
 Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$smtp3@simontbraun.eu"}
 
-Set-ADUser -Identity $username Replace @{extensionAttribute1 = $role}
-Set-ADUser -Identity $username -Replace @{extensionAttribute3 = $LinkedIn}
-Set-ADUser -Identity $username -Replace @{ipPhone =$Phone}
-Set-ADUser -Identity $username -Add @{telephoneNumber ="+32 2 533 1$DeskPhone" }
 
 Set-Location "\\braunbigwood.local\dfs\Personal"
 mkdir $username
