@@ -3,7 +3,7 @@ import-Module ActiveDirectory
 #Function to connect to the O365 tennant
 function M365_Connection {
     $login = Read-Host "enter your login"
-    Install-Module -Name ExchangeOnlineManagement -Scope AllUsers -Force
+    Install-Module -Name ExchangeOnlineManagement -Scope AllUsers -Force -RequiredVersion 3.5.1 -Force
     Install-Module MSOnline
     Import-Module MSOnline
     Install-Module AzureAD
@@ -76,7 +76,7 @@ function Remove-StringDiacritic {
 
 #function to start logging
 function Start-Logging {
-    $CurrentDateTime = Get-Date -Format "dd-MM-yyyy"
+    $CurrentDateTime = Get-Date -Format "dd-MM-yyyy_HH-mm"
     $FileNameBase = "NewUserLogs"
     $FileExtension = "txt"
     $logpath = "C:\temp\"
@@ -87,24 +87,9 @@ function Start-Logging {
     New-Item -Path $logpath -Name $FileName -ItemType File
     Start-Transcript -Path $logfile -Append
     Write-Host "Logging started" -ForegroundColor Green
+    return "$($logpath)$($FileNameBase)_$($CurrentDateTime).$($FileExtension)"
 }
 
-<# $OutputDirectory = "C:\Temp\MyLogs"
-
-# 2. Get the current date and time and format it for use in a filename.
-#    The format 'yyyyMMdd_HHmmss' ensures a consistent, sortable filename
-#    (e.g., 20250627_153045).
-$CurrentDateTime = Get-Date -Format "yyyyMMdd_HHmmss"
-
-# 3. Define the base name for your file.
-$FileNameBase = "MyDynamicFile"
-
-# 4. Define the file extension.
-$FileExtension = "txt"
-
-# 5. Construct the full filename using the base name, current date/time, and extension.
-$FileName = "$($FileNameBase)_$($CurrentDateTime).$($FileExtension)"
-#>
 #function to get the example user + check if user is in disabled OU or not
 function GetExampleUser ($ex) {
 
@@ -145,11 +130,24 @@ function CheckUsername ($ex) {
     }
 } 
 #Function to create a folder on the SIB server
- 
+function CreateFolder ($path, $username, $domain) {
+
+    $fullpath = $path + "\" + $username
+    Write-Host $fullpath
+    $user = $domain + "\" + $username
+    Write-Host $user
+    $acl = get-acl -path $fullpath
+    $new = $user, ”FullControl”, ”ContainerInherit,ObjectInherit”, ”None”, ”Allow”
+    $accessRule = new-object System.Security.AccessControl.FileSystemAccessRule $new
+    $acl.AddAccessRule($accessRule)
+    $acl | Set-Acl $fullpath
+    Write-Host "the folder $fullpath is created" -ForegroundColor Yellow
+}
 
 Write-Host "Connecting to Office 365"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
+$logs = Start-Logging
 M365_Connection
 
 #Fixed paramaters
@@ -176,11 +174,11 @@ while ($Lastname -eq "") {
 $userlogin = Read-Host "Enther the username"
 $username = CheckUsername($userlogin)
 
-
 $I = Read-Host "Enter the Initials for the user"
 while ($I -eq "") {
     $I = Read-Host "Enter the Initials for the user"
 }
+
 
 #set initials to capital letters
 $Initials = $I.ToUpper()
@@ -192,6 +190,7 @@ $Lastname_clean = $Lastname.Trim() -replace "\s"
 $UPN = $firstname.ToLower()+"."+$Lastname_clean.ToLower()
 $example = Read-Host "Example user"
 $example_user = GetExampleUser($example)
+
 
 <#$role = Read-Host "What is the role of the user? (Lawyer, Counsel, Partner, Associate, Reception or Student?)"
 while ($role -eq "") {
@@ -211,6 +210,7 @@ while ($null -eq $Phone -or $Phone -eq "") {
     $Phone = Read-Host "Enter DESK phone number"
 }
 
+
 $password = Read-Host "enter the password for the new user" -AsSecureString
 
 #steps to place the user in the correct OU based on their language
@@ -220,13 +220,17 @@ if ($OU.Substring(3,3).Replace(",","") -ne $Language)
 {
     $Corrected_OU = $OU.Replace(($OU.Substring(3,3).Replace(",","")),$Language)
 }
+else {
+    $Corrected_OU = $OU
+}
 
 #User creation with, firstname, lastname, OU, SamAccountname, password, displayname, email, UPN, Country, Postal code, zip code, adres, company
 New-ADUser -Name $firstname" "$Lastname -Path $Corrected_OU -SamAccountName $username -AccountPassword $password -DisplayName $firstname" "$Lastname -EmailAddress $UPN@simontbraun.eu -City $City -State $State -Country $Country -PostalCode $ZipCode -Office $office -Surname $Lastname -GivenName $firstname -StreetAddress $Street -Company $example_user.Company -Enabled $true -UserPrincipalName $username@simontbraun.eu
 
 #copy user to the same AD groups as the example user
 Get-ADuser -identity $example_user.SamAccountName -properties memberof | select-object memberof -expandproperty memberof | Add-AdGroupMember -Members $login
-
+$groups = Get-ADuser -identity $example_user.SamAccountName -properties memberof | select-object memberof -expandproperty memberof
+#Add-Content -Path $logs -Value "Added groups: $groups"
 
 Set-ADUser -Identity $username -ScriptPath $example_user.ScriptPath -HomePage $website -Initials $Initials.ToUpper() -Add @{Proxyaddresses = "SMTP:$UPN@simontbraun.eu"}
 Set-ADUser -Identity $username -Description $role
@@ -243,28 +247,27 @@ Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$username@simontbra
 Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$Initials@simontbraun.be"}
 Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$Initials@simontbraun.eu"}
 
-$smtp= Remove-StringDiacritic -String $firstname[0]+"."+$Lastname_clean
+$smtp= $firstname[0]+"."+$Lastname_clean
 Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$smtp@simontbraun.be"}
 Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$smtp@simontbraun.eu"}
 
-$smtp2 = Remove-StringDiacritic -String $firstname[0]+"."+$Lastname_clean[0]
+$smtp2 = $firstname[0]+"."+$Lastname_clean[0]
 Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$smtp2@simontbraun.be"}
 Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$smtp2@simontbraun.eu"}
 
-$smtp3 = Remove-StringDiacritic -String $firstname+"."+ $Lastname[0]
+$smtp3 = $firstname+"."+ $Lastname[0]
 Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$smtp3@simontbraun.be"}
 Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$smtp3@simontbraun.eu"}
 
+Add-Content -Path $logs -Value "firstname: $firstname","Lastname: $Lastname","username: $username","UPN: $UPN","Phone: $Phone","Office: $office", "example user: $example"
 
 Set-Location "\\braunbigwood.local\dfs\Personal"
 mkdir $username
 
-if ($role -eq "Lawyer" -or $role -eq "Partner") {
-    $fileshare = "\\braunbigwood.local\dfs\Personal"
-    $domain = "braunbigwood"
-    createFolder $fileshare $login $domain
-    Set-ADUser $login -HomeDirectory $fileshare+"\"+$login -HomeDrive "X:"
-}
+$fileshare = "\\braunbigwood.local\dfs\Personal"
+$domain = "braunbigwood"
+createFolder $fileshare $username $domain
+Set-ADUser $username -HomeDirectory $fileshare+"\"+$login -HomeDrive "X:"
 
 Set-Location "\\SIBDC02\c$\_Scripts"
 .\DeltaSync.ps1
