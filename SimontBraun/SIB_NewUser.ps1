@@ -272,7 +272,7 @@ Set-Location "\\SIBDC02\c$\_Scripts"
 Write-Host "syncing... this may take up to 2 minutes" -ForegroundColor Yellow -BackgroundColor Black
 Start-Sleep -Seconds 120
 
-$AZ_New_User = Get-AzureADuser -SearchString $username
+<#$AZ_New_User = Get-AzureADuser -SearchString $username
 $AZ_Example_user = Get-AzureADUser -SearchString $example
 
 $group_list = Get-AzureADUserMembership -ObjectId $AZ_Example_user.ObjectId
@@ -300,7 +300,7 @@ foreach ($group in $group_list) {
     }
 }
 
-<#$licenses = (Get-MsolAccountSku | Where-Object { $_.SkuPartNumber -like "Win10_VDA_E3"}).AccountSkuId
+$licenses = (Get-MsolAccountSku | Where-Object { $_.SkuPartNumber -like "Win10_VDA_E3"}).AccountSkuId
 $user = Get-MsolUser -UserPrincipalName $login"@simontbraun.eu"
   if ($null -ne $user) {
     Set-MsolUserLicense -UserPrincipalName $user.UserPrincipalName -AddLicenses $licenses
