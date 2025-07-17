@@ -81,9 +81,6 @@ function Start-Logging {
     $FileExtension = "txt"
     $logpath = "C:\temp\"
     $FileName = "$($FileNameBase)_$($CurrentDateTime).$($FileExtension)"
-    if (Test-Path $logfile) {
-        Remove-Item $logfile -Force
-    }
     New-Item -Path $logpath -Name $FileName -ItemType File
     Start-Transcript -Path $logfile -Append
     Write-Host "Logging started" -ForegroundColor Green
@@ -255,7 +252,7 @@ $smtp2 = $firstname[0]+"."+$Lastname_clean[0]
 Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$smtp2@simontbraun.be"}
 Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$smtp2@simontbraun.eu"}
 
-$smtp3 = $firstname+"."+ $Lastname[0]
+$smtp3 =  Remove-StringDiacritic ($firstname+"."+ $Lastname[0])
 Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$smtp3@simontbraun.be"}
 Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$smtp3@simontbraun.eu"}
 
