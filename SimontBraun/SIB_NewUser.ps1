@@ -81,6 +81,7 @@ function Start-Logging {
     $FileExtension = "txt"
     $logpath = "C:\temp\"
     $FileName = "$($FileNameBase)_$($CurrentDateTime).$($FileExtension)"
+    $logfile = $logpath + $FileName
     New-Item -Path $logpath -Name $FileName -ItemType File
     Start-Transcript -Path $logfile -Append
     Write-Host "Logging started" -ForegroundColor Green
@@ -145,7 +146,7 @@ Write-Host "Connecting to Office 365"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 $logs = Start-Logging
-M365_Connection
+#M365_Connection
 
 #Fixed paramaters
 $Street = "Avenue Louise 250"
