@@ -53,11 +53,11 @@ $CheckButton.Location = New-Object System.Drawing.Point(370, 90)
 $CheckButton.Size = New-Object System.Drawing.Size(100, 20)
 
 # define action for Check Username button
-$CheckButton.Click {
-$username = $text_username.Text
+$CheckButton.Add_Click({
+$userlogin = $text_username.Text
 CheckUsername($userlogin)
+} )
 
-}
 
 # Create a submit button
 $submitButton = New-Object System.Windows.Forms.Button
