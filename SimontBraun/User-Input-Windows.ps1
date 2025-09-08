@@ -46,6 +46,18 @@ $text_username.Location = New-Object System.Drawing.Point(150, 90)
 $text_username.Size = New-Object System.Drawing.Size(200, 20)
 $text_username.Anchor = [System.Windows.Forms.AnchorStyles]::Top -bor [System.Windows.Forms.AnchorStyles]::Left -bor [System.Windows.Forms.AnchorStyles]::Right
 
+# Create a label for the fourth input field
+$label_ExampleUser = New-Object System.Windows.Forms.Label
+$label_ExampleUser.Text = "Enter the example user:"
+$label_ExampleUser.Location = New-Object System.Drawing.Point(30, 120) # X, Y
+$label_ExampleUser.AutoSize = $true # Adjust size to fit text
+
+# Create a text box for the fourh input field
+$text_ExampleUser = New-Object System.Windows.Forms.TextBox
+$text_ExampleUser.Location = New-Object System.Drawing.Point(150, 120)
+$text_ExampleUser.Size = New-Object System.Drawing.Size(200, 20)
+$text_ExampleUser.Anchor = [System.Windows.Forms.AnchorStyles]::Top -bor [System.Windows.Forms.AnchorStyles]::Left -bor [System.Windows.Forms.AnchorStyles]::Right
+
 # Create a check username button
 $CheckButton = New-Object System.Windows.Forms.Button
 $CheckButton.Text = "Check username"
@@ -58,11 +70,10 @@ $userlogin = $text_username.Text
 CheckUsername($userlogin)
 } )
 
-
 # Create a submit button
 $submitButton = New-Object System.Windows.Forms.Button
 $submitButton.Text = "Submit"
-$submitButton.Location = New-Object System.Drawing.Point(150, 120)
+$submitButton.Location = New-Object System.Drawing.Point(150, 200)
 $submitButton.Size = New-Object System.Drawing.Size(100, 30)
 
 # Add controls to the form
@@ -73,6 +84,8 @@ $form.Controls.Add($text_lastname)
 $form.Controls.Add($submitButton)
 $form.Controls.Add($label_username)
 $form.Controls.Add($text_username)
+$form.Controls.Add($label_ExampleUser)
+$form.Controls.Add($test_ExampleUser)
 $form.Controls.Add($CheckButton)
 
 # Set the form's accept button (allows pressing Enter to submit)
