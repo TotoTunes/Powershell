@@ -330,7 +330,9 @@ $form.ShowDialog()
 
 }
 
-Write-Host "Connecting to Office 365"
+#Write-Host "Connecting to Office 365"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 $logs = Start-Logging
+
+Inputscreen;
