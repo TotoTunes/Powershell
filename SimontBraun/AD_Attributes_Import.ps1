@@ -14,7 +14,7 @@ Import-Module ActiveDirectory
  
 # Define the path to the Excel file
 
-$excelFilePath = "\\braunbigwood.local\dfs\Public\IT\datasib.xlsx"
+$excelFilePath = "\\braunbigwood.local\dfs\Public\IT\datasib_test.xlsx"
  
 # Read the Excel file
 
@@ -43,6 +43,12 @@ foreach ($row in $data) {
     $linkedIn = $row.LinkedIn
 
     $company = $row.Company
+
+    $department = $row.Department
+    
+    $extension = $row.'IP Phone'
+
+    $desk = $row.Office
  
     Write-Host "Processing user: $email"
  
@@ -60,9 +66,16 @@ foreach ($row in $data) {
 
             if ($lawyerTitle) { Set-ADUser -Identity $user -Replace @{extensionAttribute10= $lawyerTitle} }
 
-            if ($title) { Set-ADUser -Identity $user -Replace @{extensionAttribute11= $title} }
+            if ($title) { 
+                            Set-ADUser -Identity $user -Replace @{extensionAttribute11= $title}
+                            Set-ADUser -Identity $user -Description $title
+                            Set-ADUser -identity $user -Title $title
+                        } 
+    
 
             if ($officePhone) { Set-ADUser -Identity $user -Replace @{telephoneNumber= $officePhone} }
+
+            if ($extension) { Set-ADUser -Identity $user -Replace @{ipPhone= $extension} }
 
             if ($assistantPhone) { Set-ADUser -Identity $user -Replace @{telephoneAssistant= $assistantPhone} }
 
@@ -75,6 +88,10 @@ foreach ($row in $data) {
             if ($linkedIn) { Set-ADUser -Identity $user -Replace @{extensionAttribute14= $linkedIn} }
 
             if ($company) { Set-ADUser -Identity $user -Replace @{extensionAttribute15= $company} }
+
+            if ($department) { Set-ADUser -Identity $user -Department $department} 
+
+            if ($desk) { Set-ADUser -Identity $user -Office $desk} 
 
             Write-Host "Updated attributes for user: $email"
 
