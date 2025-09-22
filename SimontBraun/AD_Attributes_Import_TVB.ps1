@@ -5,6 +5,23 @@ if (-not (Get-Module -ListAvailable -Name ImportExcel)) {
     Install-Module -Name ImportExcel -Scope CurrentUser -Force
 
 }
+#region Logging
+$timestamp = Get-Date -Format "dd-MM-yyyy_HH:mm"
+$LogFile = "\\\braunbigwood.local\dfs\Public\IT\Logs\SignatureUpdate_$timestamp.txt"
+function Write-Log {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [string]$Message
+    )
+    process {
+        if ($LogFile) {
+            $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+            "[$Timestamp] - $Message" | Out-File -FilePath $LogFile -Append
+        }
+    }
+}
+#endregion
  
 # Import the necessary modules
 
