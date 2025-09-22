@@ -1,5 +1,22 @@
 import-Module ActiveDirectory
 
+#region Logging
+$LogFile = $null
+function Write-Log {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [string]$Message
+    )
+    process {
+        if ($LogFile) {
+            $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+            "[$Timestamp] - $Message" | Out-File -FilePath $LogFile -Append
+        }
+    }
+}
+#endregion
+
 #Function to connect to the O365 tennant
 function M365_Connection {
     $login = Read-Host "enter your login"
@@ -74,19 +91,6 @@ function Remove-StringDiacritic {
     }
 }
 
-#function to start logging
-function Start-Logging {
-    $CurrentDateTime = Get-Date -Format "dd-MM-yyyy_HH-mm"
-    $FileNameBase = "NewUserLogs"
-    $FileExtension = "txt"
-    $logpath = "C:\temp\"
-    $FileName = "$($FileNameBase)_$($CurrentDateTime).$($FileExtension)"
-    $logfile = $logpath + $FileName
-    New-Item -Path $logpath -Name $FileName -ItemType File
-    Start-Transcript -Path $logfile -Append
-    Write-Host "Logging started" -ForegroundColor Green
-    return "$($logpath)$($FileNameBase)_$($CurrentDateTime).$($FileExtension)"
-}
 
 #function to get the example user + check if user is in disabled OU or not
 function GetExampleUser ($ex) {
@@ -145,7 +149,6 @@ function CreateFolder ($path, $username, $domain) {
 Write-Host "Connecting to Office 365"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-$logs = Start-Logging
 #M365_Connection
 
 #Fixed paramaters
@@ -160,6 +163,7 @@ $Fax = "+32 2 533 17 90"
 
 #parameters for user creation
 $firstname = Read-Host "Enter the first name"
+"Logging input: First Name = '$firstname'" | Write-Log
 while ($firstname -eq "") {
     $firstname = Read-Host "Enter the first name"
 }
@@ -188,6 +192,7 @@ $Lastname_clean = $Lastname.Trim() -replace "\s"
 $UPN = $firstname.ToLower()+"."+$Lastname_clean.ToLower()
 $example = Read-Host "Example user"
 $example_user = GetExampleUser($example)
+"Logging input: Example User = '$example'" | Write-Log
 
 
 <#$role = Read-Host "What is the role of the user? (Lawyer, Counsel, Partner, Associate, Reception or Student?)"
@@ -199,17 +204,20 @@ $office = Read-Host "What is the office of the user?"
 while ($office -eq "") {
     $office = Read-Host "What is the office of the user?"
 }
+"Logging input: Office = '$office'" | Write-Log
 
 $language = Read-Host "What is the language for the user? (NL or FR or UK)"
-
+"Logging input: Language = '$language'" | Write-Log
 
 $Phone = Read-Host "Enter DESK phone number"
 while ($null -eq $Phone -or $Phone -eq "") {
     $Phone = Read-Host "Enter DESK phone number"
 }
+"Logging input: Phone = '$Phone'" | Write-Log
 
 
 $password = Read-Host "enter the password for the new user" -AsSecureString
+"Password has been provided (value not logged for security)." | Write-Log
 
 #steps to place the user in the correct OU based on their language
 [int]$index = $example_user.DistinguishedName.IndexOf(",")
@@ -217,18 +225,24 @@ $OU= $example_user.DistinguishedName.Substring($index+1)
 if ($OU.Substring(3,3).Replace(",","") -ne $Language)
 {
     $Corrected_OU = $OU.Replace(($OU.Substring(3,3).Replace(",","")),$Language)
+    "Determined OU: '$Corrected_OU' (corrected from example user)." | Write-Log
 }
 else {
     $Corrected_OU = $OU
+    "Determined OU: '$Corrected_OU' (from example user)." | Write-Log
 }
 
 #User creation with, firstname, lastname, OU, SamAccountname, password, displayname, email, UPN, Country, Postal code, zip code, adres, company
+"Creating new AD user '$username' in OU '$Corrected_OU'." | Write-Log
 New-ADUser -Name $firstname" "$Lastname -Path $Corrected_OU -SamAccountName $username -AccountPassword $password -DisplayName $firstname" "$Lastname -EmailAddress $UPN@simontbraun.eu -City $City -State $State -Country $Country -PostalCode $ZipCode -Office $office -Surname $Lastname -GivenName $firstname -StreetAddress $Street -Company $example_user.Company -Enabled $true -UserPrincipalName $username@simontbraun.eu
+"New AD user '$username' created successfully." | Write-Log
 
 #copy user to the same AD groups as the example user
+"Copying group memberships from '$($example_user.SamAccountName)' to '$username'." | Write-Log
 Get-ADuser -identity $example_user.SamAccountName -properties memberof | select-object memberof -expandproperty memberof | Add-AdGroupMember -Members $login
 $groups = Get-ADuser -identity $example_user.SamAccountName -properties memberof | select-object memberof -expandproperty memberof
 #Add-Content -Path $logs -Value "Added groups: $groups"
+"Added user to the following groups: $($groups -join ', ')" | Write-Log
 
 Set-ADUser -Identity $username -ScriptPath $example_user.ScriptPath -HomePage $website -Initials $Initials.ToUpper() -Add @{Proxyaddresses = "SMTP:$UPN@simontbraun.eu"}
 Set-ADUser -Identity $username -Description $role
@@ -236,6 +250,7 @@ Set-ADUser -Identity $username -Fax $Fax
 Set-ADUser -Identity $username -POBox $PO_Box
 Set-ADUser -Identity $username -Title $role -Department $example_user.Department
 
+"Setting additional user attributes (ScriptPath, HomePage, Initials, etc.)." | Write-Log
 
 Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$UPN@simontbraun.be"}
 
@@ -257,7 +272,7 @@ $smtp3 =  Remove-StringDiacritic ($firstname+"."+ $Lastname[0])
 Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$smtp3@simontbraun.be"}
 Set-ADUser -Identity $username -Add @{Proxyaddresses = "smtp:$smtp3@simontbraun.eu"}
 
-Add-Content -Path $logs -Value "firstname: $firstname","Lastname: $Lastname","username: $username","UPN: $UPN","Phone: $Phone","Office: $office", "example user: $example"
+"Adding proxy addresses." | Write-Log
 
 Set-Location "\\braunbigwood.local\dfs\Personal"
 mkdir $username
@@ -266,12 +281,15 @@ $fileshare = "\\braunbigwood.local\dfs\Personal"
 $domain = "braunbigwood"
 createFolder $fileshare $username $domain
 Set-ADUser $username -HomeDirectory $fileshare+"\"+$login -HomeDrive "X:"
+"Created home folder and set home drive." | Write-Log
 
 Set-Location "\\SIBDC02\c$\_Scripts"
+Write-Log "Running DeltaSync.ps1..."
 .\DeltaSync.ps1
 
 Write-Host "syncing... this may take up to 2 minutes" -ForegroundColor Yellow -BackgroundColor Black
 Start-Sleep -Seconds 120
+"Delta sync initiated. Waiting for 120 seconds." | Write-Log
 
 <#$AZ_New_User = Get-AzureADuser -SearchString $username
 $AZ_Example_user = Get-AzureADUser -SearchString $example
@@ -317,3 +335,4 @@ $user = Get-MsolUser -UserPrincipalName $login"@simontbraun.eu"
     Write-Output "User $displayName ($user.UserPrincipalName) not found."
   }
   #>
+"Script finished." | Write-Log
