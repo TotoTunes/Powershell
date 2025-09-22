@@ -75,7 +75,7 @@ function Remove-StringDiacritic {
 }
 
 #function to start logging
-function Start-Logging {
+<#function Start-Logging {
     $CurrentDateTime = Get-Date -Format "dd-MM-yyyy_HH-mm"
     $FileNameBase = "NewUserLogs"
     $FileExtension = "txt"
@@ -87,7 +87,7 @@ function Start-Logging {
     Write-Host "Logging started" -ForegroundColor Green
     return "$($logpath)$($FileNameBase)_$($CurrentDateTime).$($FileExtension)"
 }
-
+#>
 #function to get the example user + check if user is in disabled OU or not
 function GetExampleUser ($ex) {
 
@@ -99,6 +99,7 @@ function GetExampleUser ($ex) {
             GetExampleUser($example)
         }
         Write-Host "User found" -ForegroundColor Green
+        "Logging input: Example User = '$ex'" | Write-Log
         return $AD
     }
     Catch [Microsoft.ActiveDirectory.Management.ADIdentityNotFoundException] { 
@@ -123,6 +124,7 @@ function CheckUsername ($ex) {
     }
     Catch [Microsoft.ActiveDirectory.Management.ADIdentityNotFoundException] { 
         Write-Host "Username is free" -ForegroundColor Green
+        "Logging input: Username = '$ex'" | Write-Log
         $AD = $ex
         return $AD
     }
@@ -332,8 +334,26 @@ $form.ShowDialog()
 Write-Host "Connecting to Office 365"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-$logs = Start-Logging
+#$logs = Start-Logging
 #M365_Connection
+
+#region Logging
+$timestamp = Get-Date -Format "dd-MM-yyyy_HH:mm"
+$LogFile = "\\SIBDC05\C$\NewUserLogs\NewUser_$timestamp.txt"
+function Write-Log {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [string]$Message
+    )
+    process {
+        if ($LogFile) {
+            $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+            "[$Timestamp] - $Message" | Out-File -FilePath $LogFile -Append
+        }
+    }
+}
+#endregion
 
 #Fixed paramaters
 $Street = "Avenue Louise 250"
@@ -344,17 +364,20 @@ $ZipCode = "1050"
 $Country = "BE"
 $website = "www.simontbraun.eu"
 $Fax = "+32 2 533 17 90"
+"Fixed parameters set" | Write-Log
 
 #parameters for user creation
 $firstname = Read-Host "Enter the first name"
 while ($firstname -eq "") {
     $firstname = Read-Host "Enter the first name"
 }
+"Logging input: First Name = '$firstname'" | Write-Log
 
 $Lastname = Read-Host "Enter the Last name"
 while ($Lastname -eq "") {
    $Lastname = Read-Host "Enter the Last name"
 }
+"Logging input: Last Name = '$Lastname'" | Write-Log
 
 $userlogin = Read-Host "Enther the username"
 $username = CheckUsername($userlogin)
@@ -364,23 +387,18 @@ while ($I -eq "") {
     $I = Read-Host "Enter the Initials for the user"
 }
 
-
 #set initials to capital letters
 $Initials = $I.ToUpper()
+"Logging input: Initials = '$Initials'" | Write-Log
 
 #clean up last name
 $Lastname_clean = $Lastname.Trim() -replace "\s"
 
 #remove capital letters from first and last name
 $UPN = $firstname.ToLower()+"."+$Lastname_clean.ToLower()
+
 $example = Read-Host "Example user"
 $example_user = GetExampleUser($example)
-
-
-<#$role = Read-Host "What is the role of the user? (Lawyer, Counsel, Partner, Associate, Reception or Student?)"
-while ($role -eq "") {
-    $role = Read-Host "What is the role of the user? (Lawyer, Counsel, Partner, Associate, Reception or Student?)"
-}#>
 
 $office = Read-Host "What is the office of the user?"
 while ($office -eq "") {
