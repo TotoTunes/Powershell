@@ -61,50 +61,68 @@ foreach ($row in $data) {
         Write-Host "Found user: $email"
 
         try {
+        $user = Get-ADUser -Filter {EmailAddress -eq $email} -Properties * -ErrorAction Stop
+        Write-Log "Found user: $email"
 
-            # Update the attributes if they are not null
-
-            if ($lawyerTitle) { Set-ADUser -Identity $user -Replace @{extensionAttribute10= $lawyerTitle} }
-
-            if ($title) { 
-                            Set-ADUser -Identity $user -Replace @{extensionAttribute11= $title}
-                            Set-ADUser -Identity $user -Description $title
-                            Set-ADUser -identity $user -Title $title
-                        } 
-    
-
-            if ($officePhone) { Set-ADUser -Identity $user -Replace @{telephoneNumber= $officePhone} }
-
-            if ($extension) { Set-ADUser -Identity $user -Replace @{ipPhone= $extension} }
-
-            if ($assistantPhone) { Set-ADUser -Identity $user -Replace @{telephoneAssistant= $assistantPhone} }
-
-            if ($telInSignature) { Set-ADUser -Identity $user -Replace @{extensionAttribute12= $telInSignature} }
-
-            if ($mobilePhone) { Set-ADUser -Identity $user -Replace @{mobile= $mobilePhone} }
-
-            if ($mobileSharing) { Set-ADUser -Identity $user -Replace @{extensionAttribute13= $mobileSharing} }
-
-            if ($linkedIn) { Set-ADUser -Identity $user -Replace @{extensionAttribute14= $linkedIn} }
-
-            if ($company) { Set-ADUser -Identity $user -Replace @{extensionAttribute15= $company} }
-
-            if ($department) { Set-ADUser -Identity $user -Department $department} 
-
-            if ($desk) { Set-ADUser -Identity $user -Office $desk} 
-
-            Write-Host "Updated attributes for user: $email"
-
+        # Update the attributes if they are not null
+        try {
+            if ($lawyerTitle) {
+                Set-ADUser -Identity $user -Replace @{extensionAttribute10 = $lawyerTitle} -ErrorAction Stop
+                Write-Log "Updated extensionAttribute10 for $email"
+            }
+            if ($title) {
+                Set-ADUser -Identity $user -Replace @{extensionAttribute11 = $title} -ErrorAction Stop
+                Set-ADUser -Identity $user -Description $title -ErrorAction Stop
+                Set-ADUser -Identity $user -Title $title -ErrorAction Stop
+                Write-Log "Updated extensionAttribute11, Description, and Title for $email"
+            }
+            if ($officePhone) {
+                Set-ADUser -Identity $user -Replace @{telephoneNumber = $officePhone} -ErrorAction Stop
+                Write-Log "Updated telephoneNumber for $email"
+            }
+            if ($extension) {
+                Set-ADUser -Identity $user -Replace @{ipPhone = $extension} -ErrorAction Stop
+                Write-Log "Updated ipPhone for $email"
+            }
+            if ($assistantPhone) {
+                Set-ADUser -Identity $user -Replace @{telephoneAssistant = $assistantPhone} -ErrorAction Stop
+                Write-Log "Updated telephoneAssistant for $email"
+            }
+            if ($telInSignature) {
+                Set-ADUser -Identity $user -Replace @{extensionAttribute12 = $telInSignature} -ErrorAction Stop
+                Write-Log "Updated extensionAttribute12 for $email"
+            }
+            if ($mobilePhone) {
+                Set-ADUser -Identity $user -Replace @{mobile = $mobilePhone} -ErrorAction Stop
+                Write-Log "Updated mobile for $email"
+            }
+            if ($mobileSharing) {
+                Set-ADUser -Identity $user -Replace @{extensionAttribute13 = $mobileSharing} -ErrorAction Stop
+                Write-Log "Updated extensionAttribute13 for $email"
+            }
+            if ($linkedIn) {
+                Set-ADUser -Identity $user -Replace @{extensionAttribute14 = $linkedIn} -ErrorAction Stop
+                Write-Log "Updated extensionAttribute14 for $email"
+            }
+            if ($company) {
+                Set-ADUser -Identity $user -Replace @{extensionAttribute15 = $company} -ErrorAction Stop
+                Write-Log "Updated extensionAttribute15 for $email"
+            }
+            if ($department) {
+                Set-ADUser -Identity $user -Department $department -ErrorAction Stop
+                Write-Log "Updated Department for $email"
+            }
+            if ($desk) {
+                Set-ADUser -Identity $user -Office $desk -ErrorAction Stop
+                Write-Log "Updated Office for $email"
+            }
+            Write-Log "All attributes updated successfully for user: $email"
         } catch {
-
-            Write-Host "Failed to update attributes for user: $email. Error: $_"
-
+            Write-Log "Failed to update attributes for user: $email. Error: $_" -Level "ERROR"
         }
-
-    } else {
-
-        Write-Host "User not found: $email"
-
+    } catch {
+        Write-Log "User not found: $email" -Level "WARNING"
     }
-
-} 
+}
+}
+Write-Log "Script completed."
